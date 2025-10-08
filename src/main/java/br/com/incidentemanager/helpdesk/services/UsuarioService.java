@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
-import br.com.incidentemanager.helpdesk.exceptions.BadRequestBussinessException;
+import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
 
@@ -27,7 +27,7 @@ public class UsuarioService {
 
 	private void existeUsuario(String email) {
 		if(usuarioRepository.findByEmail(email).isPresent()) {
-			throw new BadRequestBussinessException("O endereço de e-mail já está registrado. Por favor, escolha um endereço de e-mail diferente ou faça login na sua conta existente");
+			throw new BadRequestBusinessException("O endereço de e-mail já está registrado. Por favor, escolha um endereço de e-mail diferente ou faça login na sua conta existente");
 		}
 	}
 	

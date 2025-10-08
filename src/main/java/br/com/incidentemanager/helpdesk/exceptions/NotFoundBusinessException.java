@@ -1,10 +1,10 @@
 package br.com.incidentemanager.helpdesk.exceptions;
 
-public class BadRequestBussinessException extends BusinessException{
+public class NotFoundBusinessException extends BusinessException{
 
 	private static final long serialVersionUID = 1L;
 
-	public BadRequestBussinessException(String message) {
+	public NotFoundBusinessException(String message) {
 		super(message);
 	}
 
