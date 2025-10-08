@@ -18,7 +18,7 @@ public class ExecutaAposInicioDaAplicacao implements ApplicationRunner {
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
 		if(!usuarioService.existeAdm()) {
-			criaUsuarioSeNecessario("SmartDesk Adm", "smartdesk@gmail.com", "(11) 98765-4321", "@PrimeiraSenha", true, PerfilEnum.ADMIN);
+			criaUsuarioSeNecessario("SmartDesk Adm", "smartdesk@gmail.com", "(11) 98765-4321", "@PrimeiraSenha123", true, PerfilEnum.ADMIN);
 		}
 		
 	}

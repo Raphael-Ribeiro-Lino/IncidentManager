@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
+import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
 
@@ -36,6 +37,14 @@ public class UsuarioService {
 		existeUsuario(usuarioEntity.getEmail());
 		usuarioEntity.setPassword(new BCryptPasswordEncoder().encode(usuarioEntity.getPassword()));
 		return usuarioRepository.save(usuarioEntity);
+	}
+
+	public UsuarioEntity buscaPorEmail(String name) {
+		return usuarioRepository.findByEmail(name).orElseThrow(() -> new NotFoundBusinessException("Usuário não encontrado"));
+	}
+
+	public UsuarioEntity buscaPorId(Long id) {
+		return usuarioRepository.findById(id).orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
 	}
 
 	
