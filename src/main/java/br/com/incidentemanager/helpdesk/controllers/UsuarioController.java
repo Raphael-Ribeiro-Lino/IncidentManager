@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
+import br.com.incidentemanager.helpdesk.converts.UsuarioConvert;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
 
 @RestController
@@ -15,5 +16,8 @@ public class UsuarioController {
 	
 	@Autowired
 	private UsuarioService usuarioService;
+	
+	@Autowired
+	private UsuarioConvert usuarioConvert;
 
 }
