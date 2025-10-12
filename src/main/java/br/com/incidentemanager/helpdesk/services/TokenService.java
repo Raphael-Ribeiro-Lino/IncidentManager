@@ -1,9 +1,11 @@
 package br.com.incidentemanager.helpdesk.services;
 
-import java.security.Key;
 import java.util.Date;
 
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +14,6 @@ import br.com.incidentemanager.helpdesk.exceptions.UnauthorizedAccessBusinessExc
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,9 @@ public class TokenService {
 	@Autowired
 	private UsuarioService usuarioService;
 	
+	@Value("${api.security.token.secret}")
+	private String secret;
+	
 	public String criaToken(Authentication authentication) {
 		UsuarioEntity usuarioLogado = usuarioService.buscaPorEmail(authentication.getName());
 		
@@ -36,10 +40,11 @@ public class TokenService {
 		builder.claim("email", usuarioLogado.getEmail());
 		builder.claim("nome", usuarioLogado.getNome());
 		builder.claim("perfil", usuarioLogado.getPerfil());
-		builder.setIssuer("API SmartDesk");
-		builder.setIssuedAt(data);
-		builder.setExpiration(new Date(data.getTime() + Long.parseLong("86400000")));
-		builder.signWith(getSignInKey(), SignatureAlgorithm.HS256);
+		builder.issuer("API SmartDesk");
+		builder.issuedAt(data);
+		builder.expiration(new Date(data.getTime() + Long.parseLong("86400000")));
+		builder.signWith(getSignInKey());
+		builder.header().add("typ", "JWT");
 		return builder.compact();	
 	}
 	
@@ -56,14 +61,14 @@ public class TokenService {
 		}
 		token = token.substring(7);
 		try {
-			return Jwts.parserBuilder().setSigningKey(getSignInKey()).build().parseClaimsJws(token).getBody();
+			return Jwts.parser().verifyWith(getSignInKey()).build().parseSignedClaims(token).getPayload();
 		} catch (Exception e) {
 			throw new UnauthorizedAccessBusinessException("Token inválido!");
 		}
 	}
 	
-	private Key getSignInKey() {
-		byte[] keyBytes = Decoders.BASE64.decode("2D4A614E645267556B58703273357638792F423F4528482B4D6250655368566D");
+	private SecretKey getSignInKey() {
+		byte[] keyBytes = Decoders.BASE64.decode(secret);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 }
