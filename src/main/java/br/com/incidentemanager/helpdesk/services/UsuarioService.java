@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
@@ -35,7 +34,7 @@ public class UsuarioService {
 	@Transactional
 	public UsuarioEntity cadastra(UsuarioEntity usuarioEntity) {
 		existeUsuario(usuarioEntity.getEmail());
-		usuarioEntity.setPassword(new BCryptPasswordEncoder().encode(usuarioEntity.getPassword()));
+		usuarioEntity.setSenha(new BCryptPasswordEncoder().encode(usuarioEntity.getSenha()));
 		return usuarioRepository.save(usuarioEntity);
 	}
 
@@ -45,6 +44,12 @@ public class UsuarioService {
 
 	public UsuarioEntity buscaPorId(Long id) {
 		return usuarioRepository.findById(id).orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
+	}
+
+	public void verificaSenhas(String senha, String repetirSenha) {
+		if(!senha.equals(repetirSenha)) {
+			throw new BadRequestBusinessException("Senha e confirmação de senha devem ser iguais.");
+		}
 	}
 
 	

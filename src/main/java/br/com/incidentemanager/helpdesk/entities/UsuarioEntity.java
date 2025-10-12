@@ -46,8 +46,8 @@ public class UsuarioEntity implements UserDetails{
 	@Column(name = "telefone", nullable = false)
 	private String telefone;
 	
-	@Column(name = "password", nullable = false)
-	private String password;
+	@Column(name = "senha", nullable = false)
+	private String senha;
 	
 	@Column(name = "ativo", nullable = false)
 	private boolean ativo;
@@ -68,5 +68,10 @@ public class UsuarioEntity implements UserDetails{
 	@Override
 	public String getUsername() {
 		return this.email;
+	}
+
+	@Override
+	public String getPassword() {
+		return this.senha;
 	}
 }

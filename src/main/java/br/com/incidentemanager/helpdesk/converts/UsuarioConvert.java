@@ -4,9 +4,22 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
+import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
+import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import jakarta.validation.Valid;
+
 @Component
 public class UsuarioConvert {
 
 	@Autowired
 	private ModelMapper modelMapper;
+
+	public UsuarioEntity inputToEntity(@Valid UsuarioInput usuarioInput) {
+		return modelMapper.map(usuarioInput, UsuarioEntity.class);
+	}
+
+	public UsuarioOutput entityToOutput(UsuarioEntity usuarioEntity) {
+		return modelMapper.map(usuarioEntity, UsuarioOutput.class);
+	}
 }
