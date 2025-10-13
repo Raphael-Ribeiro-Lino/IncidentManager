@@ -58,6 +58,13 @@ public class UsuarioController {
 		UsuarioEntity usuarioEntity = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
 		return usuarioConvert.entityToOutput(usuarioEntity);
 	}
+	
+	@GetMapping
+	@PodeAcessarSe.EstaAutenticado
+	public UsuarioOutput buscaUsuarioLogado() {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		return usuarioConvert.entityToOutput(usuarioLogado);
+	}
 
 	private void converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
