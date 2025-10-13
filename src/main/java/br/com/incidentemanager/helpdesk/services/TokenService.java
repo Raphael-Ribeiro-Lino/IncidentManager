@@ -24,40 +24,48 @@ public class TokenService {
 
 	@Autowired
 	private HttpServletRequest request;
-	
+
 	@Autowired
 	private UsuarioService usuarioService;
-	
+
 	@Value("${api.security.token.secret}")
 	private String secret;
-	
+
 	public String criaToken(Authentication authentication) {
 		UsuarioEntity usuarioLogado = usuarioService.buscaPorEmail(authentication.getName());
-		
+		verificaSeUsuarioEstaAtivo(usuarioLogado);
 		Date data = new Date();
-		
+
 		JwtBuilder builder = Jwts.builder();
 		builder.claim("id", usuarioLogado.getId());
 		builder.claim("email", usuarioLogado.getEmail());
 		builder.claim("nome", usuarioLogado.getNome());
 		builder.claim("perfil", usuarioLogado.getPerfil());
+		builder.claim("ativo", usuarioLogado.isAtivo());
 		builder.issuer("API SmartDesk");
 		builder.issuedAt(data);
 		builder.expiration(new Date(data.getTime() + Long.parseLong("86400000")));
 		builder.signWith(getSignInKey());
 		builder.header().add("typ", "JWT");
-		return builder.compact();	
+		return builder.compact();
 	}
-	
+
+	private void verificaSeUsuarioEstaAtivo(UsuarioEntity usuarioLogado) {
+		if (!usuarioLogado.isAtivo()) {
+			throw new UnauthorizedAccessBusinessException(
+					"Seu usuário está inativo. Entre em contato com o administrador para reativar seu acesso.");
+		}
+	}
+
 	public UsuarioEntity buscaUsuario() {
 		Claims claims = extractClaims();
 		Long id = Long.valueOf(claims.get("id").toString());
 		return usuarioService.buscaPorId(id);
 	}
-	
+
 	private Claims extractClaims() {
 		String token = request.getHeader("Authorization");
-		if(token == null) {
+		if (token == null) {
 			throw new UnauthorizedAccessBusinessException("Acesso Negado!");
 		}
 		token = token.substring(7);
@@ -67,28 +75,27 @@ public class TokenService {
 			throw new UnauthorizedAccessBusinessException("Token inválido!");
 		}
 	}
-	
+
 	private SecretKey getSignInKey() {
 		byte[] keyBytes = Decoders.BASE64.decode(secret);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
-	
+
 	public boolean podeAcessarAutenticado() {
 		Claims claims = extractClaims();
-		if(claims != null) {
+		if (claims != null) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
 	}
-	
+
 	public boolean podeAcessarPorPerfil(List<String> perfisPermitidos) {
 		UsuarioEntity usuarioEntity = buscaUsuario();
-		if(!usuarioEntity.isAtivo()) {
+		if (!usuarioEntity.isAtivo()) {
 			throw new UnauthorizedAccessBusinessException("Usuário " + usuarioEntity.getId() + " está inativo");
 		}
-	    return perfisPermitidos.stream()
-	            .anyMatch(perfil -> perfil.equalsIgnoreCase(usuarioEntity.getPerfil().name()));
-		
+		return perfisPermitidos.stream().anyMatch(perfil -> perfil.equalsIgnoreCase(usuarioEntity.getPerfil().name()));
+
 	}
 }
