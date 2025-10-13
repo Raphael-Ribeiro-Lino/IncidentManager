@@ -2,6 +2,7 @@ package br.com.incidentemanager.helpdesk.converts;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
@@ -21,5 +22,9 @@ public class UsuarioConvert {
 
 	public UsuarioOutput entityToOutput(UsuarioEntity usuarioEntity) {
 		return modelMapper.map(usuarioEntity, UsuarioOutput.class);
+	}
+
+	public Page<UsuarioOutput> pageEntityToPageOutput(Page<UsuarioEntity> usuarios) {
+		return usuarios.map(this::entityToOutput);
 	}
 }

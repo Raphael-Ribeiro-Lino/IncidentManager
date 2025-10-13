@@ -1,6 +1,8 @@
 package br.com.incidentemanager.helpdesk.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -63,6 +65,13 @@ public class UsuarioService {
 		}
 		return usuarioRepository.findByIdAndEmpresa(id, usuarioLogado.getEmpresa())
 				.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
+	}
+
+	public Page<UsuarioEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado) {
+		if (usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN)) {
+			return usuarioRepository.findAll(pagination);
+		}
+		return usuarioRepository.findAllByEmpresa(pagination, usuarioLogado.getEmpresa());
 	}
 
 }

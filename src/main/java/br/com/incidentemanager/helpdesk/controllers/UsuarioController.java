@@ -1,6 +1,10 @@
 package br.com.incidentemanager.helpdesk.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,6 +68,14 @@ public class UsuarioController {
 	public UsuarioOutput buscaUsuarioLogado() {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		return usuarioConvert.entityToOutput(usuarioLogado);
+	}
+	
+	@GetMapping("/lista")
+	@PodeAcessarSe.TemPerfilAdmEmpresa
+	public Page<UsuarioOutput> lista(@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination){
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado);
+		return usuarioConvert.pageEntityToPageOutput(usuarios);
 	}
 
 	private void converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity) {
