@@ -20,10 +20,7 @@ import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.UsuarioConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
-import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
-import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
-import br.com.incidentemanager.helpdesk.services.EmpresaService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
 import jakarta.validation.Valid;
@@ -37,9 +34,6 @@ public class UsuarioController {
 	private UsuarioService usuarioService;
 	
 	@Autowired
-	private EmpresaService empresaService;
-	
-	@Autowired
 	private TokenService tokenService;
 	
 	@Autowired
@@ -49,10 +43,10 @@ public class UsuarioController {
 	@PodeAcessarSe.TemPerfilAdmEmpresa
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public UsuarioOutput cadastra(@RequestBody @Valid UsuarioInput usuarioInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		usuarioService.verificaSenhas(usuarioInput.getSenha(), usuarioInput.getRepetirSenha());
 		UsuarioEntity usuarioEntity = usuarioConvert.inputToEntity(usuarioInput);
-		converteEmpresa(usuarioInput, usuarioEntity);
-		return usuarioConvert.entityToOutput( usuarioService.cadastra(usuarioEntity));
+		return usuarioConvert.entityToOutput( usuarioService.cadastra(usuarioInput, usuarioEntity, usuarioLogado));
 	}
 	
 	@GetMapping("/{id}")
@@ -78,12 +72,5 @@ public class UsuarioController {
 		return usuarioConvert.pageEntityToPageOutput(usuarios);
 	}
 
-	private void converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity) {
-		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		EmpresaEntity empresaEntity = usuarioLogado.getEmpresa();
-		if(usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN)) {			
-			empresaEntity = empresaService.buscaPorId(usuarioInput.getEmpresa());
-		}
-		usuarioEntity.setEmpresa(empresaEntity);
-	}
+
 }

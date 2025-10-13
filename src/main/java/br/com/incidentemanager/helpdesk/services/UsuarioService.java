@@ -6,19 +6,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
+import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 @Service
 public class UsuarioService {
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
+
+	@Autowired
+	private EmpresaService empresaService;
 
 	public boolean existeAdm() {
 		if (usuarioRepository.findByPerfil(PerfilEnum.ADMIN).isPresent()) {
@@ -36,10 +40,28 @@ public class UsuarioService {
 	}
 
 	@Transactional
-	public UsuarioEntity cadastra(UsuarioEntity usuarioEntity) {
+	public void cadastraAdm(UsuarioEntity usuarioEntity) {
+		usuarioEntity.setSenha(new BCryptPasswordEncoder().encode(usuarioEntity.getSenha()));
+		usuarioRepository.save(usuarioEntity);
+	}
+
+	@Transactional
+	public UsuarioEntity cadastra(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity,
+			UsuarioEntity usuarioLogado) {
 		existeUsuario(usuarioEntity.getEmail());
+		usuarioEntity = converteEmpresa(usuarioInput, usuarioEntity, usuarioLogado);
 		usuarioEntity.setSenha(new BCryptPasswordEncoder().encode(usuarioEntity.getSenha()));
 		return usuarioRepository.save(usuarioEntity);
+	}
+
+	private UsuarioEntity converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity,
+			UsuarioEntity usuarioLogado) {
+		if (usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN)) {
+			usuarioEntity.setEmpresa(empresaService.buscaPorId(usuarioInput.getEmpresa()));
+			return usuarioEntity;
+		}
+		usuarioEntity.setEmpresa(usuarioLogado.getEmpresa());
+		return usuarioEntity;
 	}
 
 	public UsuarioEntity buscaPorEmail(String name) {

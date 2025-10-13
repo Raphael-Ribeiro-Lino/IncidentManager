@@ -26,7 +26,7 @@ public class ExecutaAposInicioDaAplicacao implements ApplicationRunner {
 	private void criaUsuarioSeNecessario(String nome, String email, String telefone, String senha, boolean ativo,
 			PerfilEnum perfil) {
 		UsuarioEntity usuarioEntity = new UsuarioEntity(null, nome, email, telefone, senha, ativo, perfil, null);
-		usuarioService.cadastra(usuarioEntity);
+		usuarioService.cadastraAdm(usuarioEntity);
 	}
 
 }
