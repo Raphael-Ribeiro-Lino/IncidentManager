@@ -89,10 +89,9 @@ public class UsuarioService {
 	}
 
 	public Page<UsuarioEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado) {
-		if (usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN)) {
-			return usuarioRepository.findAll(pagination);
-		}
-		return usuarioRepository.findAllByEmpresa(pagination, usuarioLogado.getEmpresa());
+		EmpresaEntity empresaEntity = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
+				: usuarioLogado.getEmpresa();
+		return usuarioRepository.findAllByEmpresaOptional(empresaEntity, pagination);
 	}
 
 }

@@ -20,6 +20,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 	@Query("SELECT u FROM UsuarioEntity u WHERE u.id = :id AND (:empresa IS NULL OR u.empresa = :empresa)")
 	Optional<UsuarioEntity> findByIdAndEmpresaOptional(Long id, EmpresaEntity empresa);
 
-	Page<UsuarioEntity> findAllByEmpresa(Pageable pagination, EmpresaEntity empresa);
+	@Query("SELECT u FROM UsuarioEntity u WHERE (:empresa IS NULL OR u.empresa = :empresa)")
+	Page<UsuarioEntity> findAllByEmpresaOptional(EmpresaEntity empresa, Pageable pagination);
 
 }
