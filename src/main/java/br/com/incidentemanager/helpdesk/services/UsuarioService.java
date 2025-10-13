@@ -7,6 +7,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
+import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
@@ -81,11 +82,9 @@ public class UsuarioService {
 	}
 
 	public UsuarioEntity buscaPorIdComMesmaEmpresa(Long id, UsuarioEntity usuarioLogado) {
-		if (usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN)) {
-			return usuarioRepository.findById(id)
-					.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
-		}
-		return usuarioRepository.findByIdAndEmpresa(id, usuarioLogado.getEmpresa())
+		EmpresaEntity empresaEntity = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
+				: usuarioLogado.getEmpresa();
+		return usuarioRepository.findByIdAndEmpresaOptional(id, empresaEntity)
 				.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
 	}
 
