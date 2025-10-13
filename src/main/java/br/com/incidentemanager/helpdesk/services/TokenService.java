@@ -71,4 +71,25 @@ public class TokenService {
 		byte[] keyBytes = Decoders.BASE64.decode(secret);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
+	
+	public boolean podeAcessarAutenticado() {
+		Claims claims = extractClaims();
+		if(claims != null) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	public boolean podeAcessarPorPerfil(String perfil) {
+		UsuarioEntity usuarioEntity = buscaUsuario();
+		if(!usuarioEntity.isAtivo()) {
+			throw new UnauthorizedAccessBusinessException("Usuário " + usuarioEntity.getId() + " está inativo");
+		}
+		if(usuarioEntity.getPerfil().toString().equals(perfil)) {
+			return true;
+		}else {
+			return false;
+		}
+	}
 }

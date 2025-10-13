@@ -49,5 +49,5 @@ public class UsuarioInput {
 	
 	@NotNull(message = "A empresa é obrigatória")
 	@Positive(message = "O ID da empresa deve ser válido")
-	private Long empresaId;
+	private Long empresa;
 }
