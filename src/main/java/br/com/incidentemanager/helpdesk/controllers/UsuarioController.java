@@ -16,7 +16,9 @@ import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.services.EmpresaService;
+import br.com.incidentemanager.helpdesk.services.TokenService;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
 import jakarta.validation.Valid;
 
@@ -32,6 +34,9 @@ public class UsuarioController {
 	private EmpresaService empresaService;
 	
 	@Autowired
+	private TokenService tokenService;
+	
+	@Autowired
 	private UsuarioConvert usuarioConvert;
 
 	@PostMapping
@@ -45,7 +50,11 @@ public class UsuarioController {
 	}
 
 	private void converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity) {
-		EmpresaEntity empresaEntity = empresaService.buscaPorId(usuarioInput.getEmpresa());
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		EmpresaEntity empresaEntity = usuarioLogado.getEmpresa();
+		if(usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN)) {			
+			empresaEntity = empresaService.buscaPorId(usuarioInput.getEmpresa());
+		}
 		usuarioEntity.setEmpresa(empresaEntity);
 	}
 }
