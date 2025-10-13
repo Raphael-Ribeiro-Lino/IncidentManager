@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
@@ -18,19 +19,20 @@ public class UsuarioService {
 	private UsuarioRepository usuarioRepository;
 
 	public boolean existeAdm() {
-		if(usuarioRepository.findByPerfil(PerfilEnum.ADMIN).isPresent()) {
+		if (usuarioRepository.findByPerfil(PerfilEnum.ADMIN).isPresent()) {
 			return true;
-		}else {			
+		} else {
 			return false;
 		}
 	}
 
 	private void existeUsuario(String email) {
-		if(usuarioRepository.findByEmail(email).isPresent()) {
-			throw new BadRequestBusinessException("O endereço de e-mail já está registrado. Por favor, escolha um endereço de e-mail diferente.");
+		if (usuarioRepository.findByEmail(email).isPresent()) {
+			throw new BadRequestBusinessException(
+					"O endereço de e-mail já está registrado. Por favor, escolha um endereço de e-mail diferente.");
 		}
 	}
-	
+
 	@Transactional
 	public UsuarioEntity cadastra(UsuarioEntity usuarioEntity) {
 		existeUsuario(usuarioEntity.getEmail());
@@ -39,19 +41,28 @@ public class UsuarioService {
 	}
 
 	public UsuarioEntity buscaPorEmail(String name) {
-		return usuarioRepository.findByEmail(name).orElseThrow(() -> new NotFoundBusinessException("Usuário não encontrado"));
+		return usuarioRepository.findByEmail(name)
+				.orElseThrow(() -> new NotFoundBusinessException("Usuário não encontrado"));
 	}
 
 	public UsuarioEntity buscaPorId(Long id) {
-		return usuarioRepository.findById(id).orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
+		return usuarioRepository.findById(id)
+				.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
 	}
 
 	public void verificaSenhas(String senha, String repetirSenha) {
-		if(!senha.equals(repetirSenha)) {
+		if (!senha.equals(repetirSenha)) {
 			throw new BadRequestBusinessException("Senha e confirmação de senha devem ser iguais.");
 		}
 	}
 
-	
-	
+	public UsuarioEntity buscaPorIdComMesmaEmpresa(Long id, UsuarioEntity usuarioLogado) {
+		if (usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN)) {
+			return usuarioRepository.findById(id)
+					.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
+		}
+		return usuarioRepository.findByIdAndEmpresa(id, usuarioLogado.getEmpresa())
+				.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
+	}
+
 }

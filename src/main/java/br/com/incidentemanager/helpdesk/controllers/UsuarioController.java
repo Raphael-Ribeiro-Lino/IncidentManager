@@ -3,6 +3,8 @@ package br.com.incidentemanager.helpdesk.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,6 +49,14 @@ public class UsuarioController {
 		UsuarioEntity usuarioEntity = usuarioConvert.inputToEntity(usuarioInput);
 		converteEmpresa(usuarioInput, usuarioEntity);
 		return usuarioConvert.entityToOutput( usuarioService.cadastra(usuarioEntity));
+	}
+	
+	@GetMapping("/{id}")
+	@PodeAcessarSe.TemPerfilAdmEmpresa
+	public UsuarioOutput buscaPorId(@PathVariable Long id) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		UsuarioEntity usuarioEntity = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
+		return usuarioConvert.entityToOutput(usuarioEntity);
 	}
 
 	private void converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity) {
