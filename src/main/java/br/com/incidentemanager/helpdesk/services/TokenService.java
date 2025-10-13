@@ -1,6 +1,7 @@
 package br.com.incidentemanager.helpdesk.services;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -81,15 +82,13 @@ public class TokenService {
 		}
 	}
 	
-	public boolean podeAcessarPorPerfil(String perfil) {
+	public boolean podeAcessarPorPerfil(List<String> perfisPermitidos) {
 		UsuarioEntity usuarioEntity = buscaUsuario();
 		if(!usuarioEntity.isAtivo()) {
 			throw new UnauthorizedAccessBusinessException("Usuário " + usuarioEntity.getId() + " está inativo");
 		}
-		if(usuarioEntity.getPerfil().toString().equals(perfil)) {
-			return true;
-		}else {
-			return false;
-		}
+	    return perfisPermitidos.stream()
+	            .anyMatch(perfil -> perfil.equalsIgnoreCase(usuarioEntity.getPerfil().name()));
+		
 	}
 }

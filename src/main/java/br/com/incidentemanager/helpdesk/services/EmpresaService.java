@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
+import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.EmpresaRepository;
 import jakarta.transaction.Transactional;
 
@@ -24,5 +25,9 @@ public class EmpresaService {
 		if(empresaRepository.findByCnpj(cnpj).isPresent()) {
 			throw new BadRequestBusinessException("Este CNPJ já está em uso por outra empresa.");
 		}
+	}
+
+	public EmpresaEntity buscaPorId(Long idEmpresa) {
+		return empresaRepository.findById(idEmpresa).orElseThrow(() -> new NotFoundBusinessException("Empresa "+ idEmpresa +" não encontrada"));
 	}
 }

@@ -27,7 +27,7 @@ public class UsuarioService {
 
 	private void existeUsuario(String email) {
 		if(usuarioRepository.findByEmail(email).isPresent()) {
-			throw new BadRequestBusinessException("O endereço de e-mail já está registrado. Por favor, escolha um endereço de e-mail diferente ou faça login na sua conta existente");
+			throw new BadRequestBusinessException("O endereço de e-mail já está registrado. Por favor, escolha um endereço de e-mail diferente.");
 		}
 	}
 	

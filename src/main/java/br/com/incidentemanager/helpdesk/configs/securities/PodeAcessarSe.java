@@ -22,4 +22,11 @@ public @interface PodeAcessarSe {
 	public @interface TemPerfilAdm{
 		
 	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	@PreAuthorize("@tokenService.podeAcessarPorPerfil({'ADMIN', 'ADMIN_EMPRESA'})")
+	public @interface TemPerfilAdmEmpresa{
+		
+	}
 }
