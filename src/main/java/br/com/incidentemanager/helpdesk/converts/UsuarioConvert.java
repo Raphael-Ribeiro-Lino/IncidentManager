@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -31,5 +32,9 @@ public class UsuarioConvert {
 
 	public void copyInputToEntity(UsuarioEntity usuarioLogado, @Valid AlteraMeusDadosInput alteraMeusDadosInput) {
 		modelMapper.map(alteraMeusDadosInput, usuarioLogado);
+	}
+
+	public void copyInputToEntity(UsuarioEntity usuarioEncontrado, @Valid AlteraUsuarioInput alteraUsuarioInput) {
+		modelMapper.map(alteraUsuarioInput, usuarioEncontrado);
 	}
 }

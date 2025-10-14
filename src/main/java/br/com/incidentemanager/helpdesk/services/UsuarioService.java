@@ -97,7 +97,7 @@ public class UsuarioService {
 	}
 
 	@Transactional
-	public UsuarioEntity alteraMeusDados(UsuarioEntity usuarioLogado) {
+	public UsuarioEntity altera(UsuarioEntity usuarioLogado) {
 		return usuarioRepository.save(usuarioLogado);
 	}
 

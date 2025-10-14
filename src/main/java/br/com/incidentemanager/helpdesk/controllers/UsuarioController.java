@@ -20,6 +20,7 @@ import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
 import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.UsuarioConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -80,7 +81,16 @@ public class UsuarioController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		usuarioService.verificaEmailParaAlterar(usuarioLogado.getEmail(), alteraMeusDadosInput.getEmail());
 		usuarioConvert.copyInputToEntity(usuarioLogado, alteraMeusDadosInput);
-		return usuarioConvert.entityToOutput(usuarioService.alteraMeusDados(usuarioLogado));
+		return usuarioConvert.entityToOutput(usuarioService.altera(usuarioLogado));
+	}
+	
+	@PutMapping("/{id}/altera-dados")
+	@PodeAcessarSe.TemPerfilAdmEmpresa
+	public UsuarioOutput alteraDados(@PathVariable Long id, @RequestBody @Valid AlteraUsuarioInput alteraUsuarioInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
+		usuarioConvert.copyInputToEntity(usuarioEncontrado, alteraUsuarioInput);
+		return usuarioConvert.entityToOutput(usuarioService.altera(usuarioEncontrado));
 	}
 
 }
