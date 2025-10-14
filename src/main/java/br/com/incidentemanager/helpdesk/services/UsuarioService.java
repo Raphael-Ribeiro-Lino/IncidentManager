@@ -1,5 +1,7 @@
 package br.com.incidentemanager.helpdesk.services;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -92,6 +94,18 @@ public class UsuarioService {
 		EmpresaEntity empresaEntity = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
 				: usuarioLogado.getEmpresa();
 		return usuarioRepository.findAllByEmpresaOptional(empresaEntity, pagination);
+	}
+
+	@Transactional
+	public UsuarioEntity alteraMeusDados(UsuarioEntity usuarioLogado) {
+		return usuarioRepository.save(usuarioLogado);
+	}
+
+	public void verificaEmailParaAlterar(String emailEncontrado, String emailAlterado) {
+		Optional<UsuarioEntity> usuarioEntity = usuarioRepository.findByEmail(emailAlterado);
+		if(usuarioEntity.isPresent() && !usuarioEntity.get().getEmail().equals(emailEncontrado)) {
+			throw new BadRequestBusinessException("Email já cadastrado");
+		}
 	}
 
 }

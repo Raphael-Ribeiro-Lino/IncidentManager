@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -26,5 +27,9 @@ public class UsuarioConvert {
 
 	public Page<UsuarioOutput> pageEntityToPageOutput(Page<UsuarioEntity> usuarios) {
 		return usuarios.map(this::entityToOutput);
+	}
+
+	public void copyInputToEntity(UsuarioEntity usuarioLogado, @Valid AlteraMeusDadosInput alteraMeusDadosInput) {
+		modelMapper.map(alteraMeusDadosInput, usuarioLogado);
 	}
 }

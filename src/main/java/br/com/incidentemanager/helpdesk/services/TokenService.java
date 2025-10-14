@@ -82,19 +82,18 @@ public class TokenService {
 	}
 
 	public boolean podeAcessarAutenticado() {
-		Claims claims = extractClaims();
-		if (claims != null) {
-			return true;
-		} else {
-			return false;
-		}
+	    Claims claims = extractClaims();
+	    if (claims == null) {
+	        return false;
+	    }
+	    UsuarioEntity usuarioEntity = buscaUsuario();
+	    verificaSeUsuarioEstaAtivo(usuarioEntity);
+	    return true;
 	}
 
 	public boolean podeAcessarPorPerfil(List<String> perfisPermitidos) {
 		UsuarioEntity usuarioEntity = buscaUsuario();
-		if (!usuarioEntity.isAtivo()) {
-			throw new UnauthorizedAccessBusinessException("Usuário " + usuarioEntity.getId() + " está inativo");
-		}
+		verificaSeUsuarioEstaAtivo(usuarioEntity);
 		return perfisPermitidos.stream().anyMatch(perfil -> perfil.equalsIgnoreCase(usuarioEntity.getPerfil().name()));
 
 	}

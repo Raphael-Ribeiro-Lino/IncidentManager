@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
 import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.UsuarioConvert;
+import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -72,5 +74,13 @@ public class UsuarioController {
 		return usuarioConvert.pageEntityToPageOutput(usuarios);
 	}
 
+	@PutMapping("/altera-meus-dados")
+	@PodeAcessarSe.EstaAutenticado
+	public UsuarioOutput alteraMeusDados(@RequestBody @Valid AlteraMeusDadosInput alteraMeusDadosInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		usuarioService.verificaEmailParaAlterar(usuarioLogado.getEmail(), alteraMeusDadosInput.getEmail());
+		usuarioConvert.copyInputToEntity(usuarioLogado, alteraMeusDadosInput);
+		return usuarioConvert.entityToOutput(usuarioService.alteraMeusDados(usuarioLogado));
+	}
 
 }
