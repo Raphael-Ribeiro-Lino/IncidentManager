@@ -108,4 +108,21 @@ public class UsuarioService {
 		}
 	}
 
+	@Transactional
+	public void alteraSenha(UsuarioEntity usuarioLogado, String senhaAtual, String novaSenha, String repetirNovaSenha) {
+		BCryptPasswordEncoder bcryptPasswordEncoder = new BCryptPasswordEncoder();
+		
+		if (!bcryptPasswordEncoder.matches(senhaAtual, usuarioLogado.getSenha())) {
+	        throw new BadRequestBusinessException("Senha atual incorreta");
+	    }
+		if (senhaAtual.equals(novaSenha)) {
+	        throw new BadRequestBusinessException("A nova senha não pode ser igual à senha atual");
+	    }
+		if (!novaSenha.equals(repetirNovaSenha)) {
+	        throw new BadRequestBusinessException("As senhas informadas não coincidem");
+	    }
+		usuarioLogado.setSenha(bcryptPasswordEncoder.encode(novaSenha));
+		usuarioRepository.save(usuarioLogado);
+	}
+
 }

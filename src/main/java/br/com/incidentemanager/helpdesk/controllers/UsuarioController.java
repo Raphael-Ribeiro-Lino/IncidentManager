@@ -20,6 +20,7 @@ import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
 import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.UsuarioConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.AlteraSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
@@ -32,13 +33,13 @@ import jakarta.validation.Valid;
 @RequestMapping(ControllerConfig.PRE_URL + "/usuario")
 @CrossOrigin(origins = { "http://localhost", "http://localhost:4200", "http://localhost:4200/*" })
 public class UsuarioController {
-	
+
 	@Autowired
 	private UsuarioService usuarioService;
-	
+
 	@Autowired
 	private TokenService tokenService;
-	
+
 	@Autowired
 	private UsuarioConvert usuarioConvert;
 
@@ -49,9 +50,9 @@ public class UsuarioController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		usuarioService.verificaSenhas(usuarioInput.getSenha(), usuarioInput.getRepetirSenha());
 		UsuarioEntity usuarioEntity = usuarioConvert.inputToEntity(usuarioInput);
-		return usuarioConvert.entityToOutput( usuarioService.cadastra(usuarioInput, usuarioEntity, usuarioLogado));
+		return usuarioConvert.entityToOutput(usuarioService.cadastra(usuarioInput, usuarioEntity, usuarioLogado));
 	}
-	
+
 	@GetMapping("/{id}")
 	@PodeAcessarSe.TemPerfilAdmEmpresa
 	public UsuarioOutput buscaPorId(@PathVariable Long id) {
@@ -59,17 +60,18 @@ public class UsuarioController {
 		UsuarioEntity usuarioEntity = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
 		return usuarioConvert.entityToOutput(usuarioEntity);
 	}
-	
+
 	@GetMapping
 	@PodeAcessarSe.EstaAutenticado
 	public UsuarioOutput buscaUsuarioLogado() {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		return usuarioConvert.entityToOutput(usuarioLogado);
 	}
-	
+
 	@GetMapping("/lista")
 	@PodeAcessarSe.TemPerfilAdmEmpresa
-	public Page<UsuarioOutput> lista(@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination){
+	public Page<UsuarioOutput> lista(
+			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado);
 		return usuarioConvert.pageEntityToPageOutput(usuarios);
@@ -83,7 +85,7 @@ public class UsuarioController {
 		usuarioConvert.copyInputToEntity(usuarioLogado, alteraMeusDadosInput);
 		return usuarioConvert.entityToOutput(usuarioService.altera(usuarioLogado));
 	}
-	
+
 	@PutMapping("/{id}/altera-dados")
 	@PodeAcessarSe.TemPerfilAdmEmpresa
 	public UsuarioOutput alteraDados(@PathVariable Long id, @RequestBody @Valid AlteraUsuarioInput alteraUsuarioInput) {
@@ -91,6 +93,14 @@ public class UsuarioController {
 		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
 		usuarioConvert.copyInputToEntity(usuarioEncontrado, alteraUsuarioInput);
 		return usuarioConvert.entityToOutput(usuarioService.altera(usuarioEncontrado));
+	}
+
+	@PutMapping("/altera-senha")
+	@PodeAcessarSe.EstaAutenticado
+	public void alteraSenha(@RequestBody @Valid AlteraSenhaInput alteraSenhaInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		usuarioService.alteraSenha(usuarioLogado, alteraSenhaInput.getSenhaAtual(), alteraSenhaInput.getNovaSenha(),
+				alteraSenhaInput.getRepetirNovaSenha());
 	}
 
 }
