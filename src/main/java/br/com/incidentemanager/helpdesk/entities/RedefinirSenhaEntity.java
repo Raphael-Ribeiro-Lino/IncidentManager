@@ -17,11 +17,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "redefini_senhas", indexes = { @Index(name = "idx_usuario_id", columnList = "user_id"),
+@Table(name = "redefinir_senhas", indexes = { @Index(name = "idx_usuario_id", columnList = "user_id"),
 		@Index(name = "idx_hash", columnList = "hash") })
 @Getter
 @Setter
-public class RedefiniSenhaEntity {
+public class RedefinirSenhaEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

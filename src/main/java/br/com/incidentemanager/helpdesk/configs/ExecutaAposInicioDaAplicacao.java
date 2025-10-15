@@ -5,22 +5,41 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
 
+import br.com.incidentemanager.helpdesk.entities.LayoutEmailEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
+import br.com.incidentemanager.helpdesk.services.LayoutEmailService;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
 
 @Configuration
 public class ExecutaAposInicioDaAplicacao implements ApplicationRunner {
-	
+
 	@Autowired
 	private UsuarioService usuarioService;
 
+	@Autowired
+	private LayoutEmailService layoutEmailService;
+
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
-		if(!usuarioService.existeAdm()) {
-			criaUsuarioSeNecessario("SmartDesk Adm", "smartdesk@gmail.com", "(11) 98765-4321", "@PrimeiraSenha123", true, PerfilEnum.ADMIN);
+		if (!usuarioService.existeAdm()) {
+			criaUsuarioSeNecessario("SmartDesk Adm", "smartdesk@gmail.com", "(11) 98765-4321", "@PrimeiraSenha123",
+					true, PerfilEnum.ADMIN);
 		}
-		
+
+		if (!layoutEmailService.existeRedefinirSenha()) {
+			criaLayoutSeNecessario("Redefinir Senha", "contato.smartdesk@gmail.com", "Redefina a sua senha",
+					"Foi solicitada a recuperação de senha do SmartDesk.<br /> <a href='"
+							+ "http://localhost:4200/redefine-password/"
+							+ "{HASH}' target='_blank'>Clique aqui</a> para alterar.<br />"
+							+ "Caso não tenha solicitado a alteração, ignore esta mensagem!");
+		}
+
+	}
+
+	private void criaLayoutSeNecessario(String name, String sourceEmail, String subject, String body) {
+		LayoutEmailEntity layoutEmailEntity = new LayoutEmailEntity(null, name, sourceEmail, subject, body);
+		layoutEmailService.cadastra(layoutEmailEntity);
 	}
 
 	private void criaUsuarioSeNecessario(String nome, String email, String telefone, String senha, boolean ativo,
