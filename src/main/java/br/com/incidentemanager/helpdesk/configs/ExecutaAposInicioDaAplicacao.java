@@ -39,6 +39,17 @@ public class ExecutaAposInicioDaAplicacao implements ApplicationRunner {
 							+ "O link é válido por 15 minutos.<br />"
 							+ "Caso não tenha solicitado a alteração, ignore esta mensagem!");
 		}
+		
+		if(!layoutEmailService.existeAvisoAlteracaoSenha()) {
+			log.info("Criando layout padrão para aviso alteração de senha...");
+			criaLayoutSeNecessario("Aviso de alteração de senha", "contato.smartdesk@gmail.com", "Notificação de alteração de senha",
+					"Olá!<br/><br/>" +
+					        "Informamos que a senha da sua conta foi alterada recentemente.<br/>" +
+					        "Se você não realizou essa alteração, por favor, entre em contato imediatamente com nosso suporte.<br/><br/>" +
+					        "Data/Hora da alteração: {dataHoraAlteracao}<br/><br/>" +
+					        "Atenciosamente,<br/>" +
+					        "Equipe de Segurança");
+		}
 
 	}
 

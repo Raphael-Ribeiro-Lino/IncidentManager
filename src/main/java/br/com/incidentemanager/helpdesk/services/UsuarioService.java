@@ -1,5 +1,7 @@
 package br.com.incidentemanager.helpdesk.services;
 
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +137,7 @@ public class UsuarioService {
 		if (usuarioOptional.isEmpty()) {
 			log.warn("Tentativa de redefinir senha com e-mail não cadastrado: {}", email);
 			throw new SafeResponseBusinessException(
-		            "Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
+					"Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
 		}
 
 		UsuarioEntity usuarioEncontrado = usuarioOptional.get();
@@ -143,23 +145,10 @@ public class UsuarioService {
 		if (!usuarioEncontrado.isAtivo()) {
 			log.warn("Tentativa de redefinir senha para usuário inativo: {}", email);
 			throw new SafeResponseBusinessException(
-		            "Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
+					"Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
 		}
 
 		return usuarioEncontrado;
-	}
-
-	@Transactional
-	public void enviaEmailRedefinirSenha(UsuarioEntity usuarioEncontrado) {
-		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaService.renovarTokenDoUsuario(usuarioEncontrado);
-		LayoutEmailEntity layoutEmailEntity = layoutEmailService.buscaPorNome("Redefinir Senha");
-		String emailBody = redefineBody(layoutEmailEntity.getBody(), redefinirSenhaEntity);
-		emailService.enviaEmail(usuarioEncontrado.getEmail(), layoutEmailEntity.getName(),
-				layoutEmailEntity.getSourceEmail(), layoutEmailEntity.getSubject(), emailBody);
-	}
-
-	private String redefineBody(String body, RedefinirSenhaEntity redefinirSenhaEntity) {
-		return body.replace("{HASH}", redefinirSenhaEntity.getHash());
 	}
 
 	@Transactional
@@ -185,6 +174,41 @@ public class UsuarioService {
 		if (!senha.equals(repetirSenha)) {
 			throw new BadRequestBusinessException("As senhas informadas não coincidem");
 		}
+	}
+
+	@Transactional
+	public void enviaEmailRedefinirSenha(UsuarioEntity usuario) {
+		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaService.renovarTokenDoUsuario(usuario);
+		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Redefinir Senha");
+
+		Map<String, String> placeholders = Map.of("{HASH}", redefinirSenhaEntity.getHash());
+
+		enviaEmailComLayout(usuario.getEmail(), layout, placeholders);
+	}
+
+	@Transactional
+	public void enviarEmailAvisoSenhaAlterada(RedefinirSenhaEntity redefinirSenhaEntity) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Aviso de alteração de senha");
+
+		Map<String, String> placeholders = Map.of("{dataHoraAlteracao}",
+				redefinirSenhaEntity.getUsedAt().format(formatter));
+
+		enviaEmailComLayout(redefinirSenhaEntity.getUsuario().getEmail(), layout, placeholders);
+	}
+
+	@Transactional
+	public void enviaEmailComLayout(String destinatario, LayoutEmailEntity layoutEmail,
+			Map<String, String> placeholders) {
+		String corpoFormatado = layoutEmail.getBody();
+		if (placeholders != null) {
+			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+				corpoFormatado = corpoFormatado.replace(entry.getKey(), entry.getValue());
+			}
+		}
+
+		emailService.enviaEmail(destinatario, layoutEmail.getName(), layoutEmail.getSourceEmail(),
+				layoutEmail.getSubject(), corpoFormatado);
 	}
 
 }

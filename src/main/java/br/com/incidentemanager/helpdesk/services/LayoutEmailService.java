@@ -17,11 +17,7 @@ public class LayoutEmailService {
 	private LayoutEmailRepository layoutEmailRepository;
 
 	public boolean existeRedefinirSenha() {
-		Optional<LayoutEmailEntity> layoutEmailEntity = layoutEmailRepository.findByName("Redefinir Senha");
-		if (layoutEmailEntity.isPresent()) {
-			return true;
-		}
-		return false;
+		return existeLayout("Redefinir Senha");
 	}
 
 	@Transactional
@@ -32,5 +28,17 @@ public class LayoutEmailService {
 	public LayoutEmailEntity buscaPorNome(String name) {
 		return layoutEmailRepository.findByName(name)
 				.orElseThrow(() -> new NotFoundBusinessException("Layout " + name + " não encontrado"));
+	}
+
+	public boolean existeAvisoAlteracaoSenha() {
+		return existeLayout("Aviso de alteração de senha");
+	}
+
+	private boolean existeLayout(String nome) {
+		Optional<LayoutEmailEntity> layoutEmailEntity = layoutEmailRepository.findByName(nome);
+		if (layoutEmailEntity.isPresent()) {
+			return true;
+		}
+		return false;
 	}
 }

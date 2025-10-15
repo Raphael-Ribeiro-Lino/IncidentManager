@@ -133,6 +133,7 @@ public class UsuarioController {
 		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaService.buscaPorHash(hash);
 		usuarioService.redefinirSenha(redefinirSenhaEntity, redefinirSenhaInput.getSenha(),
 				redefinirSenhaInput.getRepetirSenha());
+		usuarioService.enviarEmailAvisoSenhaAlterada(redefinirSenhaEntity);
 	}
 
 }
