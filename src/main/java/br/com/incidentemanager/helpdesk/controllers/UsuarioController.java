@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.RedefinirSenhaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.handler.ProblemExceptionOutput;
 import br.com.incidentemanager.helpdesk.services.RedefinirSenhaService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
@@ -111,11 +113,14 @@ public class UsuarioController {
 	}
 
 	@PostMapping("/redefinir-senha")
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public void enviaEmailRedefinirSenha(@RequestBody @Valid EmailRedefinirSenhaInput emailRedefinirSenhaInput) {
+	public ResponseEntity<ProblemExceptionOutput> enviaEmailRedefinirSenha(
+			@RequestBody @Valid EmailRedefinirSenhaInput emailRedefinirSenhaInput) {
 		UsuarioEntity usuarioEncontrado = usuarioService
 				.buscaPorEmailRedefinirSenha(emailRedefinirSenhaInput.getEmail());
 		usuarioService.enviaEmailRedefinirSenha(usuarioEncontrado);
+		ProblemExceptionOutput resposta = new ProblemExceptionOutput(HttpStatus.OK.value(),
+				"Se o e-mail estiver cadastrado, enviaremos um link de redefinição.");
+		return ResponseEntity.ok(resposta);
 	}
 
 	@GetMapping("/redefinir-senha/{hash}")

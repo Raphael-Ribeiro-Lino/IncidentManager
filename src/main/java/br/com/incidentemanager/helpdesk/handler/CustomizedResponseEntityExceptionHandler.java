@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
+import br.com.incidentemanager.helpdesk.exceptions.SafeResponseBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.UnauthorizedAccessBusinessException;
 
 
@@ -35,6 +36,11 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
 			WebRequest request) {
 		ProblemExceptionOutput problema = new ProblemExceptionOutput(HttpStatus.NOT_FOUND.value(), ex.getMessage());
 		return new ResponseEntity<ProblemExceptionOutput>(problema, HttpStatus.NOT_FOUND);
+	}
+	
+	@ExceptionHandler(SafeResponseBusinessException.class)
+	public ResponseEntity<ProblemExceptionOutput> handleSafeResponseBusinessException(SafeResponseBusinessException ex) {
+	    return ResponseEntity.ok(new ProblemExceptionOutput(HttpStatus.OK.value(), ex.getMessage()));
 	}
 
 	@ExceptionHandler(UnauthorizedAccessBusinessException.class)

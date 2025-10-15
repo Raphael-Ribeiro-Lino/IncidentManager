@@ -16,11 +16,14 @@ import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
+import br.com.incidentemanager.helpdesk.exceptions.SafeResponseBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class UsuarioService {
 
 	@Autowired
@@ -127,12 +130,22 @@ public class UsuarioService {
 	}
 
 	public UsuarioEntity buscaPorEmailRedefinirSenha(String email) {
-		UsuarioEntity usuarioEncontrado = usuarioRepository.findByEmail(email)
-				.orElseThrow(() -> new NotFoundBusinessException(
-						"Se o e-mail estiver cadastrado, enviaremos um link de redefinição"));
-		if (!usuarioEncontrado.isAtivo()) {
-			throw new NotFoundBusinessException("Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
+		Optional<UsuarioEntity> usuarioOptional = usuarioRepository.findByEmail(email);
+
+		if (usuarioOptional.isEmpty()) {
+			log.warn("Tentativa de redefinir senha com e-mail não cadastrado: {}", email);
+			throw new SafeResponseBusinessException(
+		            "Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
 		}
+
+		UsuarioEntity usuarioEncontrado = usuarioOptional.get();
+
+		if (!usuarioEncontrado.isAtivo()) {
+			log.warn("Tentativa de redefinir senha para usuário inativo: {}", email);
+			throw new SafeResponseBusinessException(
+		            "Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
+		}
+
 		return usuarioEncontrado;
 	}
 
