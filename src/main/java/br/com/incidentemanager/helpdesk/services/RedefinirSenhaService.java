@@ -37,7 +37,7 @@ public class RedefinirSenhaService {
 		return redefinirSenhaRepository.save(redefinirSenhaEntity);
 	}
 
-	public void verificaHash(String hash) {
+	public RedefinirSenhaEntity verificaHash(String hash) {
 		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaRepository.findByHash(hash)
 				.orElseThrow(() -> new NotFoundBusinessException("Token inválido"));
 		if (redefinirSenhaEntity.isUsed()) {
@@ -46,6 +46,19 @@ public class RedefinirSenhaService {
 		if (redefinirSenhaEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
 			throw new BadRequestBusinessException("Link expirado, solicite uma nova redefinição de senha.");
 		}
+		
+		return redefinirSenhaEntity;
+	}
+
+	public RedefinirSenhaEntity buscaPorHash(String hash) {
+		return verificaHash(hash);
+	}
+
+	@Transactional
+	public void definirTokenComoUsado(RedefinirSenhaEntity redefinirSenhaEntity) {
+		redefinirSenhaEntity.setUsed(true);
+		redefinirSenhaEntity.setUsedAt(LocalDateTime.now());
+		redefinirSenhaRepository.save(redefinirSenhaEntity);
 	}
 
 }

@@ -23,8 +23,10 @@ import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.EmailRedefinirSenhaInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.RedefinirSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
+import br.com.incidentemanager.helpdesk.entities.RedefinirSenhaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.services.RedefinirSenhaService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
@@ -41,7 +43,7 @@ public class UsuarioController {
 
 	@Autowired
 	private TokenService tokenService;
-	
+
 	@Autowired
 	private RedefinirSenhaService redefinirSenhaService;
 
@@ -107,17 +109,25 @@ public class UsuarioController {
 		usuarioService.alteraSenha(usuarioLogado, alteraSenhaInput.getSenhaAtual(), alteraSenhaInput.getNovaSenha(),
 				alteraSenhaInput.getRepetirNovaSenha());
 	}
-	
+
 	@PostMapping("/redefinir-senha")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public void enviaEmailRedefinirSenha(@RequestBody @Valid EmailRedefinirSenhaInput emailRedefinirSenhaInput) {
-		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorEmailRedefinirSenha(emailRedefinirSenhaInput.getEmail());
+		UsuarioEntity usuarioEncontrado = usuarioService
+				.buscaPorEmailRedefinirSenha(emailRedefinirSenhaInput.getEmail());
 		usuarioService.enviaEmailRedefinirSenha(usuarioEncontrado);
 	}
-	
+
 	@GetMapping("/redefinir-senha/{hash}")
 	public void verificaHash(@PathVariable String hash) {
 		redefinirSenhaService.verificaHash(hash);
+	}
+
+	@PutMapping("/redefinir-senha/{hash}")
+	public void redefinirSenha(@PathVariable String hash, @RequestBody @Valid RedefinirSenhaInput redefinirSenhaInput) {
+		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaService.buscaPorHash(hash);
+		usuarioService.redefinirSenha(redefinirSenhaEntity, redefinirSenhaInput.getSenha(),
+				redefinirSenhaInput.getRepetirSenha());
 	}
 
 }

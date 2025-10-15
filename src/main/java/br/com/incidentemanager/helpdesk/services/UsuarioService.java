@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
@@ -38,6 +38,9 @@ public class UsuarioService {
 	@Autowired
 	private EmailService emailService;
 
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
 	public boolean existeAdm() {
 		if (usuarioRepository.findByPerfil(PerfilEnum.ADMIN).isPresent()) {
 			return true;
@@ -55,8 +58,7 @@ public class UsuarioService {
 
 	@Transactional
 	public void cadastraAdm(UsuarioEntity usuarioEntity) {
-		usuarioEntity.setSenha(new BCryptPasswordEncoder().encode(usuarioEntity.getSenha()));
-		usuarioRepository.save(usuarioEntity);
+		defineSenhaESalvaUsuario(usuarioEntity);
 	}
 
 	@Transactional
@@ -64,8 +66,7 @@ public class UsuarioService {
 			UsuarioEntity usuarioLogado) {
 		existeUsuario(usuarioEntity.getEmail());
 		usuarioEntity = converteEmpresa(usuarioInput, usuarioEntity, usuarioLogado);
-		usuarioEntity.setSenha(new BCryptPasswordEncoder().encode(usuarioEntity.getSenha()));
-		return usuarioRepository.save(usuarioEntity);
+		return defineSenhaESalvaUsuario(usuarioEntity);
 	}
 
 	private UsuarioEntity converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity,
@@ -86,12 +87,6 @@ public class UsuarioService {
 	public UsuarioEntity buscaPorId(Long id) {
 		return usuarioRepository.findById(id)
 				.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
-	}
-
-	public void verificaSenhas(String senha, String repetirSenha) {
-		if (!senha.equals(repetirSenha)) {
-			throw new BadRequestBusinessException("Senha e confirmação de senha devem ser iguais.");
-		}
 	}
 
 	public UsuarioEntity buscaPorIdComMesmaEmpresa(Long id, UsuarioEntity usuarioLogado) {
@@ -121,19 +116,14 @@ public class UsuarioService {
 
 	@Transactional
 	public void alteraSenha(UsuarioEntity usuarioLogado, String senhaAtual, String novaSenha, String repetirNovaSenha) {
-		BCryptPasswordEncoder bcryptPasswordEncoder = new BCryptPasswordEncoder();
-
-		if (!bcryptPasswordEncoder.matches(senhaAtual, usuarioLogado.getSenha())) {
+		if (!passwordEncoder.matches(senhaAtual, usuarioLogado.getSenha())) {
 			throw new BadRequestBusinessException("Senha atual incorreta");
 		}
 		if (senhaAtual.equals(novaSenha)) {
 			throw new BadRequestBusinessException("A nova senha não pode ser igual à senha atual");
 		}
-		if (!novaSenha.equals(repetirNovaSenha)) {
-			throw new BadRequestBusinessException("As senhas informadas não coincidem");
-		}
-		usuarioLogado.setSenha(bcryptPasswordEncoder.encode(novaSenha));
-		usuarioRepository.save(usuarioLogado);
+		verificaSenhas(novaSenha, repetirNovaSenha);
+		defineSenhaESalvaUsuario(usuarioLogado, novaSenha);
 	}
 
 	public UsuarioEntity buscaPorEmailRedefinirSenha(String email) {
@@ -157,6 +147,31 @@ public class UsuarioService {
 
 	private String redefineBody(String body, RedefinirSenhaEntity redefinirSenhaEntity) {
 		return body.replace("{HASH}", redefinirSenhaEntity.getHash());
+	}
+
+	@Transactional
+	public void redefinirSenha(RedefinirSenhaEntity redefinirSenhaEntity, String senha, String repetirSenha) {
+		verificaSenhas(senha, repetirSenha);
+		defineSenhaESalvaUsuario(redefinirSenhaEntity.getUsuario(), senha);
+		redefinirSenhaService.definirTokenComoUsado(redefinirSenhaEntity);
+	}
+
+	@Transactional
+	private UsuarioEntity defineSenhaESalvaUsuario(UsuarioEntity usuarioEntity) {
+		usuarioEntity.setSenha(passwordEncoder.encode(usuarioEntity.getSenha()));
+		return usuarioRepository.save(usuarioEntity);
+	}
+
+	@Transactional
+	private void defineSenhaESalvaUsuario(UsuarioEntity usuarioEntity, String novaSenha) {
+		usuarioEntity.setSenha(passwordEncoder.encode(novaSenha));
+		usuarioRepository.save(usuarioEntity);
+	}
+
+	public void verificaSenhas(String senha, String repetirSenha) {
+		if (!senha.equals(repetirSenha)) {
+			throw new BadRequestBusinessException("As senhas informadas não coincidem");
+		}
 	}
 
 }
