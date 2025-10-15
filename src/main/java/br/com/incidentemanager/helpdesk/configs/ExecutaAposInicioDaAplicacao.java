@@ -10,8 +10,10 @@ import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.services.LayoutEmailService;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
+@Slf4j
 public class ExecutaAposInicioDaAplicacao implements ApplicationRunner {
 
 	@Autowired
@@ -23,15 +25,18 @@ public class ExecutaAposInicioDaAplicacao implements ApplicationRunner {
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
 		if (!usuarioService.existeAdm()) {
+			log.info("Criando usuário administrador padrão...");
 			criaUsuarioSeNecessario("SmartDesk Adm", "smartdesk@gmail.com", "(11) 98765-4321", "@PrimeiraSenha123",
 					true, PerfilEnum.ADMIN);
 		}
 
 		if (!layoutEmailService.existeRedefinirSenha()) {
+			log.info("Criando layout padrão para redefinição de senha...");
 			criaLayoutSeNecessario("Redefinir Senha", "contato.smartdesk@gmail.com", "Redefina a sua senha",
 					"Foi solicitada a recuperação de senha do SmartDesk.<br /> <a href='"
-							+ "http://localhost:4200/redefine-password/"
-							+ "{HASH}' target='_blank'>Clique aqui</a> para alterar.<br />"
+							+ "http://localhost:4200/redefinir-senha/"
+							+ "{HASH}' target='_blank'>Clique aqui</a> para alterar sua senha.<br />"
+							+ "O link é válido por 15 minutos.<br />"
 							+ "Caso não tenha solicitado a alteração, ignore esta mensagem!");
 		}
 

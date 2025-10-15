@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.entities.LayoutEmailEntity;
+import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.LayoutEmailRepository;
 import jakarta.transaction.Transactional;
 
@@ -17,7 +18,7 @@ public class LayoutEmailService {
 
 	public boolean existeRedefinirSenha() {
 		Optional<LayoutEmailEntity> layoutEmailEntity = layoutEmailRepository.findByName("Redefinir Senha");
-		if(layoutEmailEntity.isPresent()) {
+		if (layoutEmailEntity.isPresent()) {
 			return true;
 		}
 		return false;
@@ -26,5 +27,10 @@ public class LayoutEmailService {
 	@Transactional
 	public void cadastra(LayoutEmailEntity layoutEmailEntity) {
 		layoutEmailRepository.save(layoutEmailEntity);
+	}
+
+	public LayoutEmailEntity buscaPorNome(String name) {
+		return layoutEmailRepository.findByName(name)
+				.orElseThrow(() -> new NotFoundBusinessException("Layout " + name + " não encontrado"));
 	}
 }

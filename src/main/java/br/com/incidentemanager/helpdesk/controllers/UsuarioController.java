@@ -22,6 +22,7 @@ import br.com.incidentemanager.helpdesk.converts.UsuarioConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.EmailRedefinirSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -101,6 +102,13 @@ public class UsuarioController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		usuarioService.alteraSenha(usuarioLogado, alteraSenhaInput.getSenhaAtual(), alteraSenhaInput.getNovaSenha(),
 				alteraSenhaInput.getRepetirNovaSenha());
+	}
+	
+	@PostMapping("/redefinir-senha")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public void enviaEmailRedefinirSenha(@RequestBody @Valid EmailRedefinirSenhaInput emailRedefinirSenhaInput) {
+		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorEmailRedefinirSenha(emailRedefinirSenhaInput.getEmail());
+		usuarioService.enviaEmailRedefinirSenha(usuarioEncontrado);
 	}
 
 }

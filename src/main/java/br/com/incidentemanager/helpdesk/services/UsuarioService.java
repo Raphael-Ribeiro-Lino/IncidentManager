@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
+import br.com.incidentemanager.helpdesk.entities.LayoutEmailEntity;
+import br.com.incidentemanager.helpdesk.entities.RedefinirSenhaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
@@ -26,6 +28,15 @@ public class UsuarioService {
 
 	@Autowired
 	private EmpresaService empresaService;
+
+	@Autowired
+	private RedefinirSenhaService redefinirSenhaService;
+
+	@Autowired
+	private LayoutEmailService layoutEmailService;
+
+	@Autowired
+	private EmailService emailService;
 
 	public boolean existeAdm() {
 		if (usuarioRepository.findByPerfil(PerfilEnum.ADMIN).isPresent()) {
@@ -67,8 +78,8 @@ public class UsuarioService {
 		return usuarioEntity;
 	}
 
-	public UsuarioEntity buscaPorEmail(String name) {
-		return usuarioRepository.findByEmail(name)
+	public UsuarioEntity buscaPorEmail(String email) {
+		return usuarioRepository.findByEmail(email)
 				.orElseThrow(() -> new NotFoundBusinessException("Usuário não encontrado"));
 	}
 
@@ -103,7 +114,7 @@ public class UsuarioService {
 
 	public void verificaEmailParaAlterar(String emailEncontrado, String emailAlterado) {
 		Optional<UsuarioEntity> usuarioEntity = usuarioRepository.findByEmail(emailAlterado);
-		if(usuarioEntity.isPresent() && !usuarioEntity.get().getEmail().equals(emailEncontrado)) {
+		if (usuarioEntity.isPresent() && !usuarioEntity.get().getEmail().equals(emailEncontrado)) {
 			throw new BadRequestBusinessException("Email já cadastrado");
 		}
 	}
@@ -111,18 +122,41 @@ public class UsuarioService {
 	@Transactional
 	public void alteraSenha(UsuarioEntity usuarioLogado, String senhaAtual, String novaSenha, String repetirNovaSenha) {
 		BCryptPasswordEncoder bcryptPasswordEncoder = new BCryptPasswordEncoder();
-		
+
 		if (!bcryptPasswordEncoder.matches(senhaAtual, usuarioLogado.getSenha())) {
-	        throw new BadRequestBusinessException("Senha atual incorreta");
-	    }
+			throw new BadRequestBusinessException("Senha atual incorreta");
+		}
 		if (senhaAtual.equals(novaSenha)) {
-	        throw new BadRequestBusinessException("A nova senha não pode ser igual à senha atual");
-	    }
+			throw new BadRequestBusinessException("A nova senha não pode ser igual à senha atual");
+		}
 		if (!novaSenha.equals(repetirNovaSenha)) {
-	        throw new BadRequestBusinessException("As senhas informadas não coincidem");
-	    }
+			throw new BadRequestBusinessException("As senhas informadas não coincidem");
+		}
 		usuarioLogado.setSenha(bcryptPasswordEncoder.encode(novaSenha));
 		usuarioRepository.save(usuarioLogado);
+	}
+
+	public UsuarioEntity buscaPorEmailRedefinirSenha(String email) {
+		UsuarioEntity usuarioEncontrado = usuarioRepository.findByEmail(email)
+				.orElseThrow(() -> new NotFoundBusinessException(
+						"Se o e-mail estiver cadastrado, enviaremos um link de redefinição"));
+		if (!usuarioEncontrado.isAtivo()) {
+			throw new NotFoundBusinessException("Se o e-mail estiver cadastrado, enviaremos um link de redefinição");
+		}
+		return usuarioEncontrado;
+	}
+
+	@Transactional
+	public void enviaEmailRedefinirSenha(UsuarioEntity usuarioEncontrado) {
+		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaService.renovarTokenDoUsuario(usuarioEncontrado);
+		LayoutEmailEntity layoutEmailEntity = layoutEmailService.buscaPorNome("Redefinir Senha");
+		String emailBody = redefineBody(layoutEmailEntity.getBody(), redefinirSenhaEntity);
+		emailService.enviaEmail(usuarioEncontrado.getEmail(), layoutEmailEntity.getName(),
+				layoutEmailEntity.getSourceEmail(), layoutEmailEntity.getSubject(), emailBody);
+	}
+
+	private String redefineBody(String body, RedefinirSenhaEntity redefinirSenhaEntity) {
+		return body.replace("{HASH}", redefinirSenhaEntity.getHash());
 	}
 
 }
