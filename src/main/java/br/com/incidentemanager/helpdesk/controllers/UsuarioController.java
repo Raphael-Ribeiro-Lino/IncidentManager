@@ -26,6 +26,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.EmailRedefinirSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.services.RedefinirSenhaService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
 import jakarta.validation.Valid;
@@ -40,6 +41,9 @@ public class UsuarioController {
 
 	@Autowired
 	private TokenService tokenService;
+	
+	@Autowired
+	private RedefinirSenhaService redefinirSenhaService;
 
 	@Autowired
 	private UsuarioConvert usuarioConvert;
@@ -109,6 +113,11 @@ public class UsuarioController {
 	public void enviaEmailRedefinirSenha(@RequestBody @Valid EmailRedefinirSenhaInput emailRedefinirSenhaInput) {
 		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorEmailRedefinirSenha(emailRedefinirSenhaInput.getEmail());
 		usuarioService.enviaEmailRedefinirSenha(usuarioEncontrado);
+	}
+	
+	@GetMapping("/redefinir-senha/{hash}")
+	public void verificaHash(@PathVariable String hash) {
+		redefinirSenhaService.verificaHash(hash);
 	}
 
 }

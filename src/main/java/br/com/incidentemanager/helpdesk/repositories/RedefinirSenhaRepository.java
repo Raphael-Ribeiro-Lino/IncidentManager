@@ -11,4 +11,6 @@ public interface RedefinirSenhaRepository extends JpaRepository<RedefinirSenhaEn
 
 	Optional<RedefinirSenhaEntity> findByUsuarioAndUsedFalse(UsuarioEntity usuario);
 
+	Optional<RedefinirSenhaEntity> findByHash(String hash);
+
 }
