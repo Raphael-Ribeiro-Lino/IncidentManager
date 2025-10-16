@@ -58,7 +58,6 @@ public class UsuarioController {
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public UsuarioOutput cadastra(@RequestBody @Valid UsuarioInput usuarioInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		usuarioService.verificaSenhas(usuarioInput.getSenha(), usuarioInput.getRepetirSenha());
 		UsuarioEntity usuarioEntity = usuarioConvert.inputToEntity(usuarioInput);
 		return usuarioConvert.entityToOutput(usuarioService.cadastra(usuarioInput, usuarioEntity, usuarioLogado));
 	}
@@ -118,6 +117,7 @@ public class UsuarioController {
 			@RequestBody @Valid EmailRedefinirSenhaInput emailRedefinirSenhaInput) {
 		UsuarioEntity usuarioEncontrado = usuarioService
 				.buscaPorEmailRedefinirSenha(emailRedefinirSenhaInput.getEmail());
+		usuarioService.verificaSeDefiniuSenha(usuarioEncontrado);
 		usuarioService.enviaEmailRedefinirSenha(usuarioEncontrado);
 		ProblemExceptionOutput resposta = new ProblemExceptionOutput(HttpStatus.OK.value(),
 				"Se o e-mail estiver cadastrado, enviaremos um link de redefinição.");

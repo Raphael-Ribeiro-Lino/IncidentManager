@@ -30,16 +30,6 @@ public class UsuarioInput {
 	@Size(min = 10, max = 15, message = "O telefone deve ter entre 10 e 15 caracteres")
 	@Pattern(regexp = "^\\+?\\d{0,3}?\\s?\\(?\\d{2,3}\\)?\\s?\\d{4,5}-?\\d{4}$", message = "Telefone inválido. Use um formato válido, como (11) 98765-4321 ou +55 11 98765-4321")
 	private String telefone;
-
-	@NotBlank(message = "A senha é obrigatória")
-	@Length(min = 8, max = 255, message = "A senha deve ter no mínimo 8 caracteres e no máximo 255 caracteres")
-	@Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", message = "Senha inválida. A senha deve atender aos seguintes critérios: Ter pelo menos 8 caracteres, incluir pelo menos uma letra maiúscula ou minúscula, incluir pelo menos um número e incluir pelo menos um caractere especial entre @, $, !, %, *, ?, &.")
-	private String senha;
-
-	@NotBlank(message = "Repetir a senha é obrigatório")
-	@Length(min = 8, max = 255, message = "A senha deve ter no mínimo 8 caracteres e no máximo 255 caracteres")
-	@Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", message = "Senha inválida. A senha deve atender aos seguintes critérios: Ter pelo menos 8 caracteres, incluir pelo menos uma letra maiúscula ou minúscula, incluir pelo menos um número e incluir pelo menos um caractere especial entre @, $, !, %, *, ?, &.")
-	private String repetirSenha;
 	
 	@NotNull(message = "O ativo é obrigatório")
 	private boolean ativo = true;

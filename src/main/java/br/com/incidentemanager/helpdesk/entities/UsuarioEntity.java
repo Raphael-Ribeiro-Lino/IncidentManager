@@ -46,7 +46,7 @@ public class UsuarioEntity implements UserDetails{
 	@Column(name = "telefone", nullable = false)
 	private String telefone;
 	
-	@Column(name = "senha", nullable = false)
+	@Column(name = "senha")
 	private String senha;
 	
 	@Column(name = "ativo", nullable = false)

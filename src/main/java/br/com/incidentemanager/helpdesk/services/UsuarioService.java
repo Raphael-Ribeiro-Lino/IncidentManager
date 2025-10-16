@@ -72,7 +72,9 @@ public class UsuarioService {
 			UsuarioEntity usuarioLogado) {
 		existeUsuario(usuarioEntity.getEmail());
 		usuarioEntity = converteEmpresa(usuarioInput, usuarioEntity, usuarioLogado);
-		return defineSenhaESalvaUsuario(usuarioEntity);
+		usuarioRepository.save(usuarioEntity);
+		enviaEmailDefinirSenha(usuarioEntity);
+		return usuarioEntity;
 	}
 
 	private UsuarioEntity converteEmpresa(@Valid UsuarioInput usuarioInput, UsuarioEntity usuarioEntity,
@@ -179,10 +181,11 @@ public class UsuarioService {
 
 	@Transactional
 	public void enviaEmailRedefinirSenha(UsuarioEntity usuario) {
-		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.renovarTokenDoUsuario(usuario, TipoTokenEnum.REDEFINICAO_SENHA);
+		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.renovarTokenDoUsuario(usuario,
+				TipoTokenEnum.REDEFINICAO_SENHA);
 		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Redefinir Senha");
 
-		Map<String, String> placeholders = Map.of("{HASH}", tokenAcaoEntity.getHash());
+		Map<String, String> placeholders = Map.of("{hash}", tokenAcaoEntity.getHash());
 
 		enviaEmailComLayout(usuario.getEmail(), layout, placeholders);
 	}
@@ -192,10 +195,19 @@ public class UsuarioService {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Aviso de alteração de senha");
 
-		Map<String, String> placeholders = Map.of("{dataHoraAlteracao}",
-				tokenAcaoEntity.getUsedAt().format(formatter));
+		Map<String, String> placeholders = Map.of("{dataHoraAlteracao}", tokenAcaoEntity.getUsedAt().format(formatter));
 
 		enviaEmailComLayout(tokenAcaoEntity.getUsuario().getEmail(), layout, placeholders);
+	}
+
+	@Transactional
+	private void enviaEmailDefinirSenha(UsuarioEntity usuarioEntity) {
+		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.renovarTokenDoUsuario(usuarioEntity,
+				TipoTokenEnum.CRIACAO_SENHA);
+		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Criação de senha de acesso");
+		Map<String, String> placeholders = Map.of("{nomeUsuario}", tokenAcaoEntity.getUsuario().getNome(), "{hash}",
+				tokenAcaoEntity.getHash());
+		enviaEmailComLayout(usuarioEntity.getEmail(), layout, placeholders);
 	}
 
 	@Transactional
@@ -210,6 +222,15 @@ public class UsuarioService {
 
 		emailService.enviaEmail(destinatario, layoutEmail.getName(), layoutEmail.getSourceEmail(),
 				layoutEmail.getSubject(), corpoFormatado);
+	}
+
+	@Transactional
+	public void verificaSeDefiniuSenha(UsuarioEntity usuarioEncontrado) {
+		if (usuarioEncontrado.getSenha() == null || usuarioEncontrado.getSenha().isBlank()) {
+			enviaEmailDefinirSenha(usuarioEncontrado);
+			throw new BadRequestBusinessException(
+					"Você ainda não definiu sua senha. Enviamos um novo e-mail com o link para criação.");
+		}
 	}
 
 }

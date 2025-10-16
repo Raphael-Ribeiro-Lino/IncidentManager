@@ -41,4 +41,8 @@ public class LayoutEmailService {
 		}
 		return false;
 	}
+
+	public boolean existeCriacaoDeSenha() {
+		return existeLayout("Criação de senha de acesso");
+	}
 }
