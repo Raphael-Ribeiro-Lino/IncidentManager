@@ -27,10 +27,11 @@ import br.com.incidentemanager.helpdesk.dto.inputs.EmailRedefinirSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.RedefinirSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
-import br.com.incidentemanager.helpdesk.entities.RedefinirSenhaEntity;
+import br.com.incidentemanager.helpdesk.entities.TokenAcaoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.TipoTokenEnum;
 import br.com.incidentemanager.helpdesk.handler.ProblemExceptionOutput;
-import br.com.incidentemanager.helpdesk.services.RedefinirSenhaService;
+import br.com.incidentemanager.helpdesk.services.TokenAcaoService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
 import br.com.incidentemanager.helpdesk.services.UsuarioService;
 import jakarta.validation.Valid;
@@ -47,7 +48,7 @@ public class UsuarioController {
 	private TokenService tokenService;
 
 	@Autowired
-	private RedefinirSenhaService redefinirSenhaService;
+	private TokenAcaoService tokenAcaoService;
 
 	@Autowired
 	private UsuarioConvert usuarioConvert;
@@ -125,15 +126,15 @@ public class UsuarioController {
 
 	@GetMapping("/redefinir-senha/{hash}")
 	public void verificaHash(@PathVariable String hash) {
-		redefinirSenhaService.verificaHash(hash);
+		tokenAcaoService.verificaHash(hash, TipoTokenEnum.REDEFINICAO_SENHA);
 	}
 
 	@PutMapping("/redefinir-senha/{hash}")
 	public void redefinirSenha(@PathVariable String hash, @RequestBody @Valid RedefinirSenhaInput redefinirSenhaInput) {
-		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaService.buscaPorHash(hash);
-		usuarioService.redefinirSenha(redefinirSenhaEntity, redefinirSenhaInput.getSenha(),
+		TokenAcaoEntity tokenAcaoEntity  = tokenAcaoService.verificaHash(hash, TipoTokenEnum.REDEFINICAO_SENHA);
+		usuarioService.redefinirSenha(tokenAcaoEntity, redefinirSenhaInput.getSenha(),
 				redefinirSenhaInput.getRepetirSenha());
-		usuarioService.enviarEmailAvisoSenhaAlterada(redefinirSenhaEntity);
+		usuarioService.enviarEmailAvisoSenhaAlterada(tokenAcaoEntity);
 	}
 
 }

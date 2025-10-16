@@ -13,9 +13,10 @@ import org.springframework.stereotype.Service;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.entities.LayoutEmailEntity;
-import br.com.incidentemanager.helpdesk.entities.RedefinirSenhaEntity;
+import br.com.incidentemanager.helpdesk.entities.TokenAcaoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
+import br.com.incidentemanager.helpdesk.enums.TipoTokenEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.SafeResponseBusinessException;
@@ -35,7 +36,7 @@ public class UsuarioService {
 	private EmpresaService empresaService;
 
 	@Autowired
-	private RedefinirSenhaService redefinirSenhaService;
+	private TokenAcaoService tokenAcaoService;
 
 	@Autowired
 	private LayoutEmailService layoutEmailService;
@@ -152,10 +153,10 @@ public class UsuarioService {
 	}
 
 	@Transactional
-	public void redefinirSenha(RedefinirSenhaEntity redefinirSenhaEntity, String senha, String repetirSenha) {
+	public void redefinirSenha(TokenAcaoEntity tokenAcaoEntity, String senha, String repetirSenha) {
 		verificaSenhas(senha, repetirSenha);
-		defineSenhaESalvaUsuario(redefinirSenhaEntity.getUsuario(), senha);
-		redefinirSenhaService.definirTokenComoUsado(redefinirSenhaEntity);
+		defineSenhaESalvaUsuario(tokenAcaoEntity.getUsuario(), senha);
+		tokenAcaoService.definirTokenComoUsado(tokenAcaoEntity);
 	}
 
 	@Transactional
@@ -178,23 +179,23 @@ public class UsuarioService {
 
 	@Transactional
 	public void enviaEmailRedefinirSenha(UsuarioEntity usuario) {
-		RedefinirSenhaEntity redefinirSenhaEntity = redefinirSenhaService.renovarTokenDoUsuario(usuario);
+		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.renovarTokenDoUsuario(usuario, TipoTokenEnum.REDEFINICAO_SENHA);
 		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Redefinir Senha");
 
-		Map<String, String> placeholders = Map.of("{HASH}", redefinirSenhaEntity.getHash());
+		Map<String, String> placeholders = Map.of("{HASH}", tokenAcaoEntity.getHash());
 
 		enviaEmailComLayout(usuario.getEmail(), layout, placeholders);
 	}
 
 	@Transactional
-	public void enviarEmailAvisoSenhaAlterada(RedefinirSenhaEntity redefinirSenhaEntity) {
+	public void enviarEmailAvisoSenhaAlterada(TokenAcaoEntity tokenAcaoEntity) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Aviso de alteração de senha");
 
 		Map<String, String> placeholders = Map.of("{dataHoraAlteracao}",
-				redefinirSenhaEntity.getUsedAt().format(formatter));
+				tokenAcaoEntity.getUsedAt().format(formatter));
 
-		enviaEmailComLayout(redefinirSenhaEntity.getUsuario().getEmail(), layout, placeholders);
+		enviaEmailComLayout(tokenAcaoEntity.getUsuario().getEmail(), layout, placeholders);
 	}
 
 	@Transactional
