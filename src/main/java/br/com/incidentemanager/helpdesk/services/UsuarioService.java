@@ -155,7 +155,7 @@ public class UsuarioService {
 	}
 
 	@Transactional
-	public void redefinirSenha(TokenAcaoEntity tokenAcaoEntity, String senha, String repetirSenha) {
+	public void definirSenha(TokenAcaoEntity tokenAcaoEntity, String senha, String repetirSenha) {
 		verificaSenhas(senha, repetirSenha);
 		defineSenhaESalvaUsuario(tokenAcaoEntity.getUsuario(), senha);
 		tokenAcaoService.definirTokenComoUsado(tokenAcaoEntity);

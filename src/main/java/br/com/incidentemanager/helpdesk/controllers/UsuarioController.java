@@ -24,7 +24,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.EmailRedefinirSenhaInput;
-import br.com.incidentemanager.helpdesk.dto.inputs.RedefinirSenhaInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.SenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.TokenAcaoEntity;
@@ -130,16 +130,23 @@ public class UsuarioController {
 	}
 
 	@PutMapping("/redefinir-senha/{hash}")
-	public void redefinirSenha(@PathVariable String hash, @RequestBody @Valid RedefinirSenhaInput redefinirSenhaInput) {
-		TokenAcaoEntity tokenAcaoEntity  = tokenAcaoService.verificaHash(hash, TipoTokenEnum.REDEFINICAO_SENHA);
-		usuarioService.redefinirSenha(tokenAcaoEntity, redefinirSenhaInput.getSenha(),
-				redefinirSenhaInput.getRepetirSenha());
+	public void redefinirSenha(@PathVariable String hash, @RequestBody @Valid SenhaInput senhaInput) {
+		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.verificaHash(hash, TipoTokenEnum.REDEFINICAO_SENHA);
+		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(),
+				senhaInput.getRepetirSenha());
 		usuarioService.enviarEmailAvisoSenhaAlterada(tokenAcaoEntity);
 	}
-	
+
 	@GetMapping("/definir-senha/{hash}")
 	public void verificaHashDefinirSenha(@PathVariable String hash) {
 		tokenAcaoService.verificaHash(hash, TipoTokenEnum.CRIACAO_SENHA);
+	}
+
+	@PutMapping("/definir-senha/{hash}")
+	public void definirSenha(@PathVariable String hash, @RequestBody @Valid SenhaInput senhaInput) {
+		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.verificaHash(hash, TipoTokenEnum.CRIACAO_SENHA);
+		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(),
+				senhaInput.getRepetirSenha());
 	}
 
 }

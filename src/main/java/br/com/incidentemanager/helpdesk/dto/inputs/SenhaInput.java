@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RedefinirSenhaInput {
+public class SenhaInput {
 
 	@NotBlank(message = "A senha é obrigatória")
 	@Length(min = 8, max = 255, message = "A senha deve ter no mínimo 8 caracteres e no máximo 255 caracteres")
