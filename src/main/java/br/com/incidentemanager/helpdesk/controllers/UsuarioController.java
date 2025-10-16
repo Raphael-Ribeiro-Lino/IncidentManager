@@ -125,7 +125,7 @@ public class UsuarioController {
 	}
 
 	@GetMapping("/redefinir-senha/{hash}")
-	public void verificaHash(@PathVariable String hash) {
+	public void verificaHashRedefinirSenha(@PathVariable String hash) {
 		tokenAcaoService.verificaHash(hash, TipoTokenEnum.REDEFINICAO_SENHA);
 	}
 
@@ -135,6 +135,11 @@ public class UsuarioController {
 		usuarioService.redefinirSenha(tokenAcaoEntity, redefinirSenhaInput.getSenha(),
 				redefinirSenhaInput.getRepetirSenha());
 		usuarioService.enviarEmailAvisoSenhaAlterada(tokenAcaoEntity);
+	}
+	
+	@GetMapping("/definir-senha/{hash}")
+	public void verificaHashDefinirSenha(@PathVariable String hash) {
+		tokenAcaoService.verificaHash(hash, TipoTokenEnum.CRIACAO_SENHA);
 	}
 
 }

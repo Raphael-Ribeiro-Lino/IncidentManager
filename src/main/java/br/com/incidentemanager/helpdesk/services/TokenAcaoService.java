@@ -28,7 +28,7 @@ public class TokenAcaoService {
 			throw new BadRequestBusinessException("Esse link já foi utilizado. Solicite um novo.");
 		}
 		if (tokenAcaoEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
-			throw new BadRequestBusinessException("Link expirado. Solicite uma nova redefinição.");
+			throw new BadRequestBusinessException("Link expirado. Solicite um novo.");
 		}
 		return tokenAcaoEntity;
 	}
