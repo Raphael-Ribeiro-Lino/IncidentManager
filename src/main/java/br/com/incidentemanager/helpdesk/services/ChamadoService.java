@@ -34,10 +34,11 @@ public class ChamadoService {
 			UsuarioEntity usuarioLogado) {
 		chamadoEntity.setSolicitante(usuarioLogado);
 		defineTecnicoResponsavel(chamadoEntity);
-		defineAnexos(chamadoEntity, chamadoInput, usuarioLogado);
-		ChamadoEntity chamadoCriado = chamadoRepository.save(chamadoEntity);
+		chamadoEntity.setAnexos(null);
+		ChamadoEntity chamadoCriado = chamadoRepository.saveAndFlush(chamadoEntity);
+		defineAnexos(chamadoCriado, chamadoInput, usuarioLogado);
 		
-		return chamadoCriado;
+		return chamadoRepository.save(chamadoCriado);
 	}
 
 	private void defineAnexos(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput, UsuarioEntity usuarioLogado) {
