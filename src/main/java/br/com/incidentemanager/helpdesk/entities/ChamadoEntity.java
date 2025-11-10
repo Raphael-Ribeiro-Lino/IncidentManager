@@ -87,6 +87,7 @@ public class ChamadoEntity {
 	public void prePersist() {
 		this.dataCriacao = Instant.now();
 		this.dataUltimaAtualizacao = this.dataCriacao;
+		this.protocolo = "INC-" + UUID.randomUUID().toString();
 		if (this.status == null) {
 			this.status = StatusChamadoEnum.ABERTO;
 		}
@@ -95,13 +96,6 @@ public class ChamadoEntity {
 	@PreUpdate
 	public void preUpdate() {
 		this.dataUltimaAtualizacao = Instant.now();
-	}
-	
-	@PostPersist
-	public void assignProtocoloIfNull() {
-	    if (this.protocolo == null) {
-	        this.protocolo = "INC-" + UUID.randomUUID().toString();
-	    }
 	}
 
 }

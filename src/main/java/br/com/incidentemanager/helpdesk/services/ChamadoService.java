@@ -1,13 +1,61 @@
 package br.com.incidentemanager.helpdesk.services;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.com.incidentemanager.helpdesk.dto.inputs.AnexoInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
+import br.com.incidentemanager.helpdesk.entities.AnexoEntity;
+import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
+import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.ChamadoRepository;
+import br.com.incidentemanager.helpdesk.repositories.UsuarioRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 @Service
 public class ChamadoService {
 
 	@Autowired
 	private ChamadoRepository chamadoRepository;
+
+	@Autowired
+	private AnexoService anexoService;
+
+	@Autowired
+	private UsuarioRepository usuarioRepository;
+
+	@Transactional
+	public ChamadoEntity criar(ChamadoEntity chamadoEntity, @Valid ChamadoInput chamadoInput,
+			UsuarioEntity usuarioLogado) {
+		chamadoEntity.setSolicitante(usuarioLogado);
+		defineTecnicoResponsavel(chamadoEntity);
+		defineAnexos(chamadoEntity, chamadoInput, usuarioLogado);
+		ChamadoEntity chamadoCriado = chamadoRepository.save(chamadoEntity);
+		
+		return chamadoCriado;
+	}
+
+	private void defineAnexos(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput, UsuarioEntity usuarioLogado) {
+		List<AnexoEntity> anexos = new ArrayList<>();
+		if (chamadoInput.getAnexos() != null) {
+			for (AnexoInput anexoInput : chamadoInput.getAnexos()) {
+				AnexoEntity anexoCriado = anexoService.criar(anexoInput, chamadoEntity, usuarioLogado);
+				anexos.add(anexoCriado);
+			}
+		}
+		chamadoEntity.setAnexos(anexos);
+	}
+
+	private void defineTecnicoResponsavel(ChamadoEntity chamadoEntity) {
+		UsuarioEntity tecnicoComMenosChamados = usuarioRepository.findTecnicoComMenosChamados();
+		if (tecnicoComMenosChamados == null) {
+			throw new NotFoundBusinessException("Nenhum técnico disponível para atribuição.");
+		}
+		chamadoEntity.setTecnicoResponsavel(tecnicoComMenosChamados);
+	}
 }

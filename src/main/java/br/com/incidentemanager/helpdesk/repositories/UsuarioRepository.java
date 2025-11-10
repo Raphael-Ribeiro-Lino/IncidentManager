@@ -23,4 +23,17 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 	@Query("SELECT u FROM UsuarioEntity u WHERE (:empresa IS NULL OR u.empresa = :empresa)")
 	Page<UsuarioEntity> findAllByEmpresaOptional(EmpresaEntity empresa, Pageable pagination);
 
+	@Query(value = """
+			    SELECT u.* FROM users u
+			    LEFT JOIN chamados c
+			        ON c.tecnico_responsavel_id = u.id
+			        AND c.status = 'ABERTO'
+			    WHERE u.perfil = 'TECNICO_TI'
+			    AND u.ativo = true
+			    GROUP BY u.id
+			    ORDER BY COUNT(c.id) ASC
+			    LIMIT 1
+			""", nativeQuery = true)
+	UsuarioEntity findTecnicoComMenosChamados();
+
 }

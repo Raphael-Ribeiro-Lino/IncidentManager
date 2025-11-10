@@ -35,7 +35,7 @@ public class AnexoEntity {
 	@Column(name = "tamanhoBytes", nullable = false)
 	private Long tamanhoBytes;
 	
-	@Column(name = "storagePath", nullable = false)
+	@Column(name = "storagePath", nullable = false, length = 2048)
 	private String storagePath;
 	
 	@Enumerated(EnumType.STRING)
