@@ -1,7 +1,12 @@
 package br.com.incidentemanager.helpdesk.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,22 +30,28 @@ public class ChamadoController {
 
 	@Autowired
 	private ChamadoService chamadoService;
-	
+
 	@Autowired
 	private ChamadoConvert chamadoConvert;
-	
+
 	@Autowired
 	private TokenService tokenService;
-	
-	@PostMapping(consumes = {"multipart/form-data"})
+
+	@PostMapping(consumes = { "multipart/form-data" })
 	@PodeAcessarSe.EstaAutenticado
 	public ChamadoOutput criar(@Valid @ModelAttribute ChamadoInput chamadoInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoConvert.inputToEntity(chamadoInput);
 		ChamadoEntity chamadoCriado = chamadoService.criar(chamadoEntity, chamadoInput, usuarioLogado);
 		return chamadoConvert.entityToOutput(chamadoCriado);
-		
 	}
 	
-	
+	@GetMapping
+	@PodeAcessarSe.EstaAutenticado
+	public Page<ChamadoOutput> lista(@PageableDefault(size = 10, sort = "dataUltimaAtualizacao", direction = Direction.ASC) Pageable pagination){
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado);
+		return chamadoConvert.pageEntityToPageOutput(chamados);
+	}
+
 }
