@@ -27,6 +27,9 @@ public class ChamadoService {
 
 	@Autowired
 	private AnexoService anexoService;
+	
+	@Autowired
+	private InteracaoService interacaoService;
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
@@ -39,7 +42,7 @@ public class ChamadoService {
 		chamadoEntity.setAnexos(null);
 		ChamadoEntity chamadoCriado = chamadoRepository.saveAndFlush(chamadoEntity);
 		defineAnexos(chamadoCriado, chamadoInput, usuarioLogado);
-
+		interacaoService.registrarAberturaChamado(chamadoCriado, usuarioLogado);
 		return chamadoRepository.save(chamadoCriado);
 	}
 
