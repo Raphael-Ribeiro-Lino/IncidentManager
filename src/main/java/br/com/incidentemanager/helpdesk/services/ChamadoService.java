@@ -53,7 +53,8 @@ public class ChamadoService {
 	}
 
 	private void defineTecnicoResponsavel(ChamadoEntity chamadoEntity) {
-		UsuarioEntity tecnicoComMenosChamados = usuarioRepository.findTecnicoComMenosChamados();
+		Long idEmpresa = chamadoEntity.getSolicitante().getEmpresa().getId();
+		UsuarioEntity tecnicoComMenosChamados = usuarioRepository.findTecnicoComMenosChamados(idEmpresa);
 		if (tecnicoComMenosChamados == null) {
 			throw new NotFoundBusinessException("Nenhum técnico disponível para atribuição.");
 		}

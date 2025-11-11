@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -30,10 +31,11 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 			        AND c.status = 'ABERTO'
 			    WHERE u.perfil = 'TECNICO_TI'
 			    AND u.ativo = true
+			    AND u.empresa_id = :empresaId
 			    GROUP BY u.id
 			    ORDER BY COUNT(c.id) ASC
 			    LIMIT 1
 			""", nativeQuery = true)
-	UsuarioEntity findTecnicoComMenosChamados();
+	UsuarioEntity findTecnicoComMenosChamados(@Param("empresaId") Long empresaId);
 
 }
