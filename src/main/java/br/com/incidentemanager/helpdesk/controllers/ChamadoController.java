@@ -8,6 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +53,14 @@ public class ChamadoController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
+	}
+	
+	@GetMapping("/{id}")
+	@PodeAcessarSe.EstaAutenticado
+	public ChamadoOutput buscaPorId(@PathVariable Long id) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
+		return chamadoConvert.entityToOutput(chamadoEntity);
 	}
 
 }

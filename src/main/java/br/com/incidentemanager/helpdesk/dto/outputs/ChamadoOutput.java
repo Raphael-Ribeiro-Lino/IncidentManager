@@ -14,6 +14,8 @@ import lombok.Setter;
 @Setter
 public class ChamadoOutput {
 
+	private Long id;
+	
     private String protocolo;
     
     private String titulo;      

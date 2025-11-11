@@ -48,10 +48,10 @@ public class AnexoService {
 			AnexoEntity anexoEntity) {
 		String key = String.format("chamados/%d/anexos/%d_%d_%s", chamadoEntity.getId(), usuarioLogado.getId(),
 				System.currentTimeMillis(), anexoInput.getNomeArquivo().replaceAll("\\s+", "_"));
-
 		try (InputStream inputStream = anexoInput.getArquivo().getInputStream()) {
-			anexoEntity.setStoragePath(s3Service.saveFile(key, inputStream, anexoInput.getArquivo().getSize(),
-					anexoInput.getArquivo().getContentType(), bucketName));
+			s3Service.saveFile(key, inputStream, anexoInput.getArquivo().getSize(),
+					anexoInput.getArquivo().getContentType(), bucketName);
+			anexoEntity.setStoragePath(key);
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new BusinessException("Erro ao salvar o arquivo, tente novamente!");
@@ -64,5 +64,9 @@ public class AnexoService {
 			fos.write(multipartFile.getBytes());
 		}
 		return convFile;
+	}
+
+	public String geraLinkTemporario(AnexoEntity anexoEntity) {
+		return s3Service.generatePresignedUrl(anexoEntity.getStoragePath(), bucketName);
 	}
 }

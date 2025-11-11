@@ -39,7 +39,7 @@ public class ChamadoService {
 		chamadoEntity.setAnexos(null);
 		ChamadoEntity chamadoCriado = chamadoRepository.saveAndFlush(chamadoEntity);
 		defineAnexos(chamadoCriado, chamadoInput, usuarioLogado);
-		
+
 		return chamadoRepository.save(chamadoCriado);
 	}
 
@@ -65,5 +65,16 @@ public class ChamadoService {
 
 	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado) {
 		return chamadoRepository.findAllBySolicitante(pagination, usuarioLogado);
+	}
+
+	public ChamadoEntity buscaPorId(Long id, UsuarioEntity usuarioLogado) {
+		ChamadoEntity chamadoEncontrado = chamadoRepository.findByIdAndSolicitante(id, usuarioLogado)
+				.orElseThrow(() -> new NotFoundBusinessException("Chamado " + id + " não encontrado"));
+		atualizaLinkTemporario(chamadoEncontrado);
+		return chamadoEncontrado;
+	}
+
+	private void atualizaLinkTemporario(ChamadoEntity chamadoEncontrado) {
+		chamadoEncontrado.getAnexos().forEach(anexo -> anexo.setStoragePath(anexoService.geraLinkTemporario(anexo)));
 	}
 }
