@@ -3,6 +3,7 @@ package br.com.incidentemanager.helpdesk.services;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,9 +49,9 @@ public class AnexoService {
 		String key = String.format("chamados/%d/anexos/%d_%d_%s", chamadoEntity.getId(), usuarioLogado.getId(),
 				System.currentTimeMillis(), anexoInput.getNomeArquivo().replaceAll("\\s+", "_"));
 
-		try {
-			File file = convertToFile(anexoInput.getArquivo());
-			anexoEntity.setStoragePath(s3Service.saveFile(key, file, bucketName));
+		try (InputStream inputStream = anexoInput.getArquivo().getInputStream()) {
+			anexoEntity.setStoragePath(s3Service.saveFile(key, inputStream, anexoInput.getArquivo().getSize(),
+					anexoInput.getArquivo().getContentType(), bucketName));
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new BusinessException("Erro ao salvar o arquivo, tente novamente!");
