@@ -12,6 +12,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -54,6 +55,14 @@ public class S3Service {
 		} catch (S3Exception e) {
 			System.err.println("Erro ao salvar arquivo no S3: " + e.getMessage());
 			throw new S3SaveFileErrorException();
+		}
+	}
+
+	public void deleteFile(String key, String bucketName) {
+		try {
+			s3.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build());
+		} catch (S3Exception e) {
+			System.err.println("Erro ao deletar arquivo do S3: " + e.getMessage());
 		}
 	}
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,5 +69,44 @@ public class AnexoService {
 
 	public String geraLinkTemporario(AnexoEntity anexoEntity) {
 		return s3Service.generatePresignedUrl(anexoEntity.getStoragePath(), bucketName);
+	}
+
+	public void atualizarAnexos(ChamadoEntity chamadoEntity, List<AnexoInput> novosAnexos,
+			UsuarioEntity usuarioEntity) {
+		List<AnexoEntity> anexosAtuais = chamadoEntity.getAnexos();
+
+		anexosAtuais.removeIf(anexoAtual -> {
+			boolean existeNaNovaLista = novosAnexos.stream()
+					.anyMatch(a -> a.getNomeArquivo().equals(anexoAtual.getNomeArquivo())
+							&& a.getTamanhoBytes().equals(anexoAtual.getTamanhoBytes())
+							&& a.getTipo().equals(anexoAtual.getTipo()));
+			if (!existeNaNovaLista) {
+				deletar(anexoAtual);
+				return true;
+			}
+			return false;
+		});
+
+		for (AnexoInput novoAnexo : novosAnexos) {
+			boolean jaExiste = anexosAtuais.stream().anyMatch(a -> a.getNomeArquivo().equals(novoAnexo.getNomeArquivo())
+					&& a.getTamanhoBytes().equals(novoAnexo.getTamanhoBytes()) && a.getTipo().equals(novoAnexo.getTipo()));
+
+			if (!jaExiste) {
+				AnexoEntity criado = criar(novoAnexo, chamadoEntity, usuarioEntity);
+				anexosAtuais.add(criado);
+			}
+		}
+
+		chamadoEntity.setAnexos(anexosAtuais);
+	}
+
+	@Transactional
+	public void deletar(AnexoEntity anexoEntity) {
+		try {
+			s3Service.deleteFile(anexoEntity.getStoragePath(), bucketName);
+			anexoRepository.delete(anexoEntity);
+		} catch (Exception e) {
+			throw new BusinessException("Erro ao excluir anexo: " + anexoEntity.getNomeArquivo());
+		}
 	}
 }

@@ -1,5 +1,6 @@
 package br.com.incidentemanager.helpdesk.services;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,12 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import br.com.incidentemanager.helpdesk.dto.inputs.AnexoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.entities.AnexoEntity;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
+import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.ChamadoRepository;
 import br.com.incidentemanager.helpdesk.repositories.UsuarioRepository;
@@ -27,7 +29,7 @@ public class ChamadoService {
 
 	@Autowired
 	private AnexoService anexoService;
-	
+
 	@Autowired
 	private InteracaoService interacaoService;
 
@@ -41,12 +43,12 @@ public class ChamadoService {
 		defineTecnicoResponsavel(chamadoEntity);
 		chamadoEntity.setAnexos(null);
 		ChamadoEntity chamadoCriado = chamadoRepository.saveAndFlush(chamadoEntity);
-		defineAnexos(chamadoCriado, chamadoInput, usuarioLogado);
+		defineNovosAnexos(chamadoCriado, chamadoInput, usuarioLogado);
 		interacaoService.registrarAberturaChamado(chamadoCriado, usuarioLogado);
 		return chamadoRepository.save(chamadoCriado);
 	}
 
-	private void defineAnexos(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput, UsuarioEntity usuarioLogado) {
+	private void defineNovosAnexos(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput, UsuarioEntity usuarioLogado) {
 		List<AnexoEntity> anexos = new ArrayList<>();
 		if (chamadoInput.getAnexos() != null) {
 			for (AnexoInput anexoInput : chamadoInput.getAnexos()) {
@@ -73,11 +75,28 @@ public class ChamadoService {
 	public ChamadoEntity buscaPorId(Long id, UsuarioEntity usuarioLogado) {
 		ChamadoEntity chamadoEncontrado = chamadoRepository.findByIdAndSolicitante(id, usuarioLogado)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado " + id + " não encontrado"));
-		atualizaLinkTemporario(chamadoEncontrado);
 		return chamadoEncontrado;
 	}
 
-	private void atualizaLinkTemporario(ChamadoEntity chamadoEncontrado) {
+	public void atualizaStoragePathComLinkTemporario(ChamadoEntity chamadoEncontrado) {
 		chamadoEncontrado.getAnexos().forEach(anexo -> anexo.setStoragePath(anexoService.geraLinkTemporario(anexo)));
+	}
+
+	@Transactional
+	public ChamadoEntity alterarMeuChamado(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput) {
+		chamadoEntity.setTitulo(chamadoInput.getTitulo());
+		chamadoEntity.setDescricao(chamadoInput.getDescricao());
+		chamadoEntity.setPrioridade(chamadoInput.getPrioridade());
+		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
+		if(chamadoInput.getAnexos() != null) {
+			anexoService.atualizarAnexos(chamadoEntity, chamadoInput.getAnexos(), chamadoEntity.getSolicitante());
+		}
+		return chamadoRepository.save(chamadoEntity);
+	}
+
+	public void verificaSeStatusDoChamadoEstaAberto(StatusChamadoEnum status) {
+		if(!status.equals(StatusChamadoEnum.ABERTO) && !status.equals(StatusChamadoEnum.TRIAGEM) && !status.equals(StatusChamadoEnum.REABERTO)) {
+			throw new BadRequestBusinessException("O chamado não pode ser alterado!");
+		}
 	}
 }

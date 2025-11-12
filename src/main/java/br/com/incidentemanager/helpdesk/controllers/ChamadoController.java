@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,7 +41,7 @@ public class ChamadoController {
 
 	@PostMapping(consumes = { "multipart/form-data" })
 	@PodeAcessarSe.EstaAutenticado
-	public ChamadoOutput criar(@Valid @ModelAttribute ChamadoInput chamadoInput) {
+	public ChamadoOutput criar(@ModelAttribute @Valid ChamadoInput chamadoInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoConvert.inputToEntity(chamadoInput);
 		ChamadoEntity chamadoCriado = chamadoService.criar(chamadoEntity, chamadoInput, usuarioLogado);
@@ -60,7 +61,17 @@ public class ChamadoController {
 	public ChamadoOutput buscaPorId(@PathVariable Long id) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
+		chamadoService.atualizaStoragePathComLinkTemporario(chamadoEntity);
 		return chamadoConvert.entityToOutput(chamadoEntity);
+	}
+	
+	@PutMapping("/{id}")
+	@PodeAcessarSe.EstaAutenticado
+	public ChamadoOutput alterarMeuChamado(@ModelAttribute @Valid ChamadoInput chamadoInput, @PathVariable Long id) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
+		chamadoService.verificaSeStatusDoChamadoEstaAberto(chamadoEntity.getStatus());
+		return chamadoConvert.entityToOutput(chamadoService.alterarMeuChamado(chamadoEntity, chamadoInput));
 	}
 
 }
