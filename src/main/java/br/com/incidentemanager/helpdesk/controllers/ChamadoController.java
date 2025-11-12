@@ -83,5 +83,13 @@ public class ChamadoController {
 		Page<ChamadoEntity> chamados = chamadoService.listaMeusAtentimentos(pagination, usuarioLogado);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
+	
+	@GetMapping("/{id}/tecnico")
+	public ChamadoOutput buscaChamadoAtribuidoPorId(@PathVariable Long id) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		ChamadoEntity chamadoEntity = chamadoService.buscaChamadoAtribuidoPorId(id, usuarioLogado);
+		chamadoService.atualizaStoragePathComLinkTemporario(chamadoEntity);
+		return chamadoConvert.entityToOutput(chamadoEntity);
+	}
 
 }

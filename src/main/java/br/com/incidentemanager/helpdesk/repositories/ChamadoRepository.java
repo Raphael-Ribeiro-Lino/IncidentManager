@@ -29,4 +29,6 @@ public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 			""")
 	Page<ChamadoEntity> findAllByTecnicoResponsavel(Pageable pagination, UsuarioEntity tecnicoResponsavel);
 
+	Optional<ChamadoEntity> findByIdAndTecnicoResponsavel(Long id, UsuarioEntity tecnicoResponsavel);
+
 }
