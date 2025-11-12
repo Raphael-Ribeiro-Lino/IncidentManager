@@ -99,4 +99,8 @@ public class ChamadoService {
 			throw new BadRequestBusinessException("O chamado não pode ser alterado!");
 		}
 	}
+
+	public Page<ChamadoEntity> listaMeusAtentimentos(Pageable pagination, UsuarioEntity usuarioLogado) {
+		return chamadoRepository.findAllByTecnicoResponsavel(pagination, usuarioLogado);
+	}
 }

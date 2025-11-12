@@ -47,15 +47,16 @@ public class ChamadoController {
 		ChamadoEntity chamadoCriado = chamadoService.criar(chamadoEntity, chamadoInput, usuarioLogado);
 		return chamadoConvert.entityToOutput(chamadoCriado);
 	}
-	
+
 	@GetMapping
 	@PodeAcessarSe.EstaAutenticado
-	public Page<ChamadoOutput> lista(@PageableDefault(size = 10, sort = "dataUltimaAtualizacao", direction = Direction.ASC) Pageable pagination){
+	public Page<ChamadoOutput> lista(
+			@PageableDefault(size = 10, sort = "dataUltimaAtualizacao", direction = Direction.ASC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
-	
+
 	@GetMapping("/{id}")
 	@PodeAcessarSe.EstaAutenticado
 	public ChamadoOutput buscaPorId(@PathVariable Long id) {
@@ -64,7 +65,7 @@ public class ChamadoController {
 		chamadoService.atualizaStoragePathComLinkTemporario(chamadoEntity);
 		return chamadoConvert.entityToOutput(chamadoEntity);
 	}
-	
+
 	@PutMapping("/{id}")
 	@PodeAcessarSe.EstaAutenticado
 	public ChamadoOutput alterarMeuChamado(@ModelAttribute @Valid ChamadoInput chamadoInput, @PathVariable Long id) {
@@ -72,6 +73,15 @@ public class ChamadoController {
 		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
 		chamadoService.verificaSeStatusDoChamadoEstaAberto(chamadoEntity.getStatus());
 		return chamadoConvert.entityToOutput(chamadoService.alterarMeuChamado(chamadoEntity, chamadoInput));
+	}
+
+	@GetMapping("/tecnico")
+	@PodeAcessarSe.TemPerfilTecnicoTi
+	public Page<ChamadoOutput> listaMeusAtentimentos(
+			@PageableDefault(size = 10) Pageable pagination) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		Page<ChamadoEntity> chamados = chamadoService.listaMeusAtentimentos(pagination, usuarioLogado);
+		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
 
 }

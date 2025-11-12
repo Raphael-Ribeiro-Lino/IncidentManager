@@ -5,14 +5,28 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 
-public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long>{
+public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 
 	Page<ChamadoEntity> findAllBySolicitante(Pageable pagination, UsuarioEntity solicitante);
 
 	Optional<ChamadoEntity> findByIdAndSolicitante(Long id, UsuarioEntity solicitante);
+
+	@Query("""
+			    SELECT c FROM ChamadoEntity c
+			    WHERE c.tecnicoResponsavel = :tecnicoResponsavel
+			    ORDER BY
+			        CASE c.prioridade
+			            WHEN 'CRITICA' THEN 1
+			            WHEN 'ALTA' THEN 2
+			            WHEN 'MEDIA' THEN 3
+			            WHEN 'BAIXA' THEN 4
+			        END
+			""")
+	Page<ChamadoEntity> findAllByTecnicoResponsavel(Pageable pagination, UsuarioEntity tecnicoResponsavel);
 
 }

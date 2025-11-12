@@ -53,9 +53,6 @@ public class ChamadoEntity {
 	@Column(name = "status", nullable = false)
 	private StatusChamadoEnum status;
 
-	@Column(name = "categoria")
-	private String categoria;
-
 	@JoinColumn(name = "dataCriacao", nullable = false)
 	private Instant dataCriacao;
 	
