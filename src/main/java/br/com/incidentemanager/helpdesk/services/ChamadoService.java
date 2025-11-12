@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AnexoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.entities.AnexoEntity;
@@ -48,7 +50,8 @@ public class ChamadoService {
 		return chamadoRepository.save(chamadoCriado);
 	}
 
-	private void defineNovosAnexos(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput, UsuarioEntity usuarioLogado) {
+	private void defineNovosAnexos(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput,
+			UsuarioEntity usuarioLogado) {
 		List<AnexoEntity> anexos = new ArrayList<>();
 		if (chamadoInput.getAnexos() != null) {
 			for (AnexoInput anexoInput : chamadoInput.getAnexos()) {
@@ -88,14 +91,15 @@ public class ChamadoService {
 		chamadoEntity.setDescricao(chamadoInput.getDescricao());
 		chamadoEntity.setPrioridade(chamadoInput.getPrioridade());
 		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
-		if(chamadoInput.getAnexos() != null) {
+		if (chamadoInput.getAnexos() != null) {
 			anexoService.atualizarAnexos(chamadoEntity, chamadoInput.getAnexos(), chamadoEntity.getSolicitante());
 		}
 		return chamadoRepository.save(chamadoEntity);
 	}
 
 	public void verificaSeStatusDoChamadoEstaAberto(StatusChamadoEnum status) {
-		if(!status.equals(StatusChamadoEnum.ABERTO) && !status.equals(StatusChamadoEnum.TRIAGEM) && !status.equals(StatusChamadoEnum.REABERTO)) {
+		if (!status.equals(StatusChamadoEnum.ABERTO) && !status.equals(StatusChamadoEnum.TRIAGEM)
+				&& !status.equals(StatusChamadoEnum.REABERTO)) {
 			throw new BadRequestBusinessException("O chamado não pode ser alterado!");
 		}
 	}
@@ -108,5 +112,22 @@ public class ChamadoService {
 		ChamadoEntity chamadoEncontrado = chamadoRepository.findByIdAndTecnicoResponsavel(id, usuarioLogado)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado " + id + " não encontrado"));
 		return chamadoEncontrado;
+	}
+
+	@Transactional
+	public ChamadoEntity atualizarStatus(ChamadoEntity chamadoEntity,
+			@Valid AlteraStatusChamadoInput alteraStatusChamadoInput, UsuarioEntity usuarioLogado) {
+		chamadoEntity.setStatus(alteraStatusChamadoInput.getStatus());
+		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
+		chamadoRepository.save(chamadoEntity);
+		
+		interacaoService.registrarNovaInteracao(chamadoEntity, usuarioLogado, alteraStatusChamadoInput);
+		return chamadoEntity;
+	}
+
+	public void verificaSeChamadoFoiConcluido(ChamadoEntity chamadoEntity) {
+		if (chamadoEntity.getStatus() == StatusChamadoEnum.CONCLUIDO) {
+			throw new BadRequestBusinessException("Chamado concluído não pode ser alterado!");
+		}
 	}
 }

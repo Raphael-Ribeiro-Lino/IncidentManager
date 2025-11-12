@@ -8,15 +8,18 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
 import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.ChamadoConvert;
+import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
@@ -77,19 +80,29 @@ public class ChamadoController {
 
 	@GetMapping("/tecnico")
 	@PodeAcessarSe.TemPerfilTecnicoTi
-	public Page<ChamadoOutput> listaMeusAtentimentos(
-			@PageableDefault(size = 10) Pageable pagination) {
+	public Page<ChamadoOutput> listaMeusAtentimentos(@PageableDefault(size = 10) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		Page<ChamadoEntity> chamados = chamadoService.listaMeusAtentimentos(pagination, usuarioLogado);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
-	
+
 	@GetMapping("/{id}/tecnico")
 	public ChamadoOutput buscaChamadoAtribuidoPorId(@PathVariable Long id) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaChamadoAtribuidoPorId(id, usuarioLogado);
 		chamadoService.atualizaStoragePathComLinkTemporario(chamadoEntity);
 		return chamadoConvert.entityToOutput(chamadoEntity);
+	}
+
+	@PatchMapping("/{id}/status")
+	@PodeAcessarSe.TemPerfilTecnicoTi
+	public ChamadoOutput atualizarStatus(@PathVariable Long id,
+			@Valid @RequestBody AlteraStatusChamadoInput alteraStatusChamadoInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		ChamadoEntity chamadoEntity = chamadoService.buscaChamadoAtribuidoPorId(id, usuarioLogado);
+		chamadoService.verificaSeChamadoFoiConcluido(chamadoEntity);
+		ChamadoEntity atualizado = chamadoService.atualizarStatus(chamadoEntity, alteraStatusChamadoInput, usuarioLogado);
+		return chamadoConvert.entityToOutput(atualizado);
 	}
 
 }
