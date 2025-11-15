@@ -12,6 +12,10 @@ public class EmpresaOutput {
 	private String nome;
 	
 	private String cnpj;
+	
+	private String cidade;
+	
+	private String estado;
 
 	private boolean ativo;
 }

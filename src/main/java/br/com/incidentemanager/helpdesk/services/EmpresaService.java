@@ -1,6 +1,8 @@
 package br.com.incidentemanager.helpdesk.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
@@ -29,5 +31,9 @@ public class EmpresaService {
 
 	public EmpresaEntity buscaPorId(Long idEmpresa) {
 		return empresaRepository.findById(idEmpresa).orElseThrow(() -> new NotFoundBusinessException("Empresa "+ idEmpresa +" não encontrada"));
+	}
+
+	public Page<EmpresaEntity> lista(Pageable pagination) {
+		return empresaRepository.findAll(pagination);
 	}
 }
