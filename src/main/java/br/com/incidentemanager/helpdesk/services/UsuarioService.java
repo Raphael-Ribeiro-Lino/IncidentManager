@@ -125,7 +125,8 @@ public class UsuarioService {
 	public void verificaEmailParaAlterar(String emailEncontrado, String emailAlterado) {
 		Optional<UsuarioEntity> usuarioEntity = usuarioRepository.findByEmail(emailAlterado);
 		if (usuarioEntity.isPresent() && !usuarioEntity.get().getEmail().equals(emailEncontrado)) {
-			throw new BadRequestBusinessException("Email já cadastrado");
+			throw new BadRequestBusinessException(
+					"O endereço de e-mail já está registrado. Por favor, escolha um endereço de e-mail diferente.");
 		}
 	}
 

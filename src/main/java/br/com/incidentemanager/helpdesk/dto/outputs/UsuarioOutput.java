@@ -1,5 +1,6 @@
 package br.com.incidentemanager.helpdesk.dto.outputs;
 
+import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,4 +19,6 @@ public class UsuarioOutput {
 	private boolean ativo;
 	
 	private EmpresaOutput empresa;
+	
+	private PerfilEnum perfil;
 }

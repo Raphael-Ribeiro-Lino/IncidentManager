@@ -103,6 +103,7 @@ public class UsuarioController {
 	public UsuarioOutput alteraDados(@PathVariable Long id, @RequestBody @Valid AlteraUsuarioInput alteraUsuarioInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
+		usuarioService.verificaEmailParaAlterar(usuarioEncontrado.getEmail(), alteraUsuarioInput.getEmail());
 		usuarioConvert.copyInputToEntity(usuarioEncontrado, alteraUsuarioInput);
 		return usuarioConvert.entityToOutput(usuarioService.altera(usuarioEncontrado));
 	}
