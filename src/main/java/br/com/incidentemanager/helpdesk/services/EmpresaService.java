@@ -36,4 +36,8 @@ public class EmpresaService {
 	public Page<EmpresaEntity> lista(Pageable pagination) {
 		return empresaRepository.findAll(pagination);
 	}
+
+	public Page<EmpresaEntity> listaPorNomeOuCnpj(String termo, Pageable pagination) {
+	    return empresaRepository.findByNomeContainingIgnoreCaseOrCnpjContainingIgnoreCase(termo, termo, pagination);
+	}
 }

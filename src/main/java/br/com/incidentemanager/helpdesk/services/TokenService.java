@@ -42,6 +42,9 @@ public class TokenService {
 		builder.claim("nome", usuarioLogado.getNome());
 		builder.claim("perfil", usuarioLogado.getPerfil());
 		builder.claim("ativo", usuarioLogado.isAtivo());
+	    if (usuarioLogado.getEmpresa() != null) {
+	        builder.claim("empresa_id", usuarioLogado.getEmpresa().getId());
+	    }
 		builder.issuer("API SmartDesk");
 		builder.issuedAt(data);
 		builder.expiration(new Date(data.getTime() + Long.parseLong("86400000")));
