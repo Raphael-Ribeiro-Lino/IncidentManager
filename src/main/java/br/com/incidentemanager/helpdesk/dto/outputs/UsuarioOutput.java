@@ -16,4 +16,6 @@ public class UsuarioOutput {
 	private String telefone;
 	
 	private boolean ativo;
+	
+	private EmpresaOutput empresa;
 }

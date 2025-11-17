@@ -104,11 +104,18 @@ public class UsuarioService {
 				.orElseThrow(() -> new NotFoundBusinessException("Usuário " + id + " não encontrado"));
 	}
 
-	public Page<UsuarioEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado) {
-		EmpresaEntity empresaEntity = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
-				: usuarioLogado.getEmpresa();
-		return usuarioRepository.findAllByEmpresaOptional(empresaEntity, pagination);
-	}
+	public Page<UsuarioEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String search) {
+        EmpresaEntity empresaEntity = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
+                : usuarioLogado.getEmpresa();
+
+        if (search != null && !search.isBlank()) {
+            return usuarioRepository.findByEmpresaAndNomeOrEmailExcluindoLogado(
+                    empresaEntity, search, usuarioLogado.getId(), pagination);
+        } else {
+            return usuarioRepository.findAllByEmpresaOptionalExcluindoLogado(
+                    empresaEntity, usuarioLogado.getId(), pagination);
+        }
+    }
 
 	@Transactional
 	public UsuarioEntity altera(UsuarioEntity usuarioLogado) {

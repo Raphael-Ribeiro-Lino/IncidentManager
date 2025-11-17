@@ -38,4 +38,15 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 			""", nativeQuery = true)
 	UsuarioEntity findTecnicoComMenosChamados(@Param("empresaId") Long empresaId);
 
+	@Query("SELECT u FROM UsuarioEntity u " + "WHERE (:empresa IS NULL OR u.empresa = :empresa) "
+			+ "AND u.id <> :usuarioLogadoId")
+	Page<UsuarioEntity> findAllByEmpresaOptionalExcluindoLogado(@Param("empresa") EmpresaEntity empresa,
+			@Param("usuarioLogadoId") Long usuarioLogadoId, Pageable pagination);
+
+	@Query("SELECT u FROM UsuarioEntity u " + "WHERE (:empresa IS NULL OR u.empresa = :empresa) "
+			+ "AND (LOWER(u.nome) LIKE LOWER(CONCAT('%', :search, '%')) "
+			+ "     OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) " + "AND u.id <> :usuarioLogadoId")
+	Page<UsuarioEntity> findByEmpresaAndNomeOrEmailExcluindoLogado(@Param("empresa") EmpresaEntity empresa,
+			@Param("search") String search, @Param("usuarioLogadoId") Long usuarioLogadoId, Pageable pageable);
+
 }

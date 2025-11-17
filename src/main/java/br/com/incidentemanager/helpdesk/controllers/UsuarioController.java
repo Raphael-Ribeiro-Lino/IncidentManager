@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -77,14 +78,16 @@ public class UsuarioController {
 		return usuarioConvert.entityToOutput(usuarioLogado);
 	}
 
-	@GetMapping("/lista")
-	@PodeAcessarSe.TemPerfilAdmEmpresa
-	public Page<UsuarioOutput> lista(
-			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
-		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado);
-		return usuarioConvert.pageEntityToPageOutput(usuarios);
-	}
+    @GetMapping("/lista")
+    @PodeAcessarSe.TemPerfilAdmEmpresa
+    public Page<UsuarioOutput> lista(
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
+
+        UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+        Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado, search);
+        return usuarioConvert.pageEntityToPageOutput(usuarios);
+    }
 
 	@PutMapping("/altera-meus-dados")
 	@PodeAcessarSe.EstaAutenticado
