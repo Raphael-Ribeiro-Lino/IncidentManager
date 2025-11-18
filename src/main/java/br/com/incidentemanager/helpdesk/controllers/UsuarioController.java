@@ -78,16 +78,14 @@ public class UsuarioController {
 		return usuarioConvert.entityToOutput(usuarioLogado);
 	}
 
-    @GetMapping("/lista")
-    @PodeAcessarSe.TemPerfilAdmEmpresa
-    public Page<UsuarioOutput> lista(
-            @RequestParam(required = false) String search,
-            @PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
-
-        UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-        Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado, search);
-        return usuarioConvert.pageEntityToPageOutput(usuarios);
-    }
+	@GetMapping("/lista")
+	@PodeAcessarSe.TemPerfilAdmEmpresa
+	public Page<UsuarioOutput> lista(@RequestParam(required = false) String search,
+			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado, search);
+		return usuarioConvert.pageEntityToPageOutput(usuarios);
+	}
 
 	@PutMapping("/altera-meus-dados")
 	@PodeAcessarSe.EstaAutenticado
@@ -137,8 +135,7 @@ public class UsuarioController {
 	@PutMapping("/redefinir-senha/{hash}")
 	public void redefinirSenha(@PathVariable String hash, @RequestBody @Valid SenhaInput senhaInput) {
 		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.verificaHash(hash, TipoTokenEnum.REDEFINICAO_SENHA);
-		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(),
-				senhaInput.getRepetirSenha());
+		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(), senhaInput.getRepetirSenha());
 		usuarioService.enviarEmailAvisoSenhaAlterada(tokenAcaoEntity);
 	}
 
@@ -150,8 +147,7 @@ public class UsuarioController {
 	@PutMapping("/definir-senha/{hash}")
 	public void definirSenha(@PathVariable String hash, @RequestBody @Valid SenhaInput senhaInput) {
 		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.verificaHash(hash, TipoTokenEnum.CRIACAO_SENHA);
-		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(),
-				senhaInput.getRepetirSenha());
+		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(), senhaInput.getRepetirSenha());
 	}
 
 }

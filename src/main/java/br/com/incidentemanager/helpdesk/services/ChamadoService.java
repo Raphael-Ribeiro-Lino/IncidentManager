@@ -71,7 +71,11 @@ public class ChamadoService {
 		chamadoEntity.setTecnicoResponsavel(tecnicoComMenosChamados);
 	}
 
-	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado) {
+	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String searchTerm) {
+		if (searchTerm != null && !searchTerm.isBlank()) {
+			return chamadoRepository.findAllBySolicitanteAndSearchTerm(pagination, usuarioLogado, searchTerm);
+		}
+
 		return chamadoRepository.findAllBySolicitante(pagination, usuarioLogado);
 	}
 
@@ -120,7 +124,7 @@ public class ChamadoService {
 		chamadoEntity.setStatus(alteraStatusChamadoInput.getStatus());
 		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
 		chamadoRepository.save(chamadoEntity);
-		
+
 		interacaoService.registrarNovaInteracao(chamadoEntity, usuarioLogado, alteraStatusChamadoInput);
 		return chamadoEntity;
 	}

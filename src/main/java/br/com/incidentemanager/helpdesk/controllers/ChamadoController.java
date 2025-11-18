@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
@@ -51,12 +52,12 @@ public class ChamadoController {
 		return chamadoConvert.entityToOutput(chamadoCriado);
 	}
 
-	@GetMapping
+	@GetMapping("/lista")
 	@PodeAcessarSe.EstaAutenticado
-	public Page<ChamadoOutput> lista(
+	public Page<ChamadoOutput> lista(@RequestParam(required = false) String search,
 			@PageableDefault(size = 10, sort = "dataUltimaAtualizacao", direction = Direction.ASC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado);
+		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado, search);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
 
@@ -101,7 +102,8 @@ public class ChamadoController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaChamadoAtribuidoPorId(id, usuarioLogado);
 		chamadoService.verificaSeChamadoFoiConcluido(chamadoEntity);
-		ChamadoEntity atualizado = chamadoService.atualizarStatus(chamadoEntity, alteraStatusChamadoInput, usuarioLogado);
+		ChamadoEntity atualizado = chamadoService.atualizarStatus(chamadoEntity, alteraStatusChamadoInput,
+				usuarioLogado);
 		return chamadoConvert.entityToOutput(atualizado);
 	}
 
