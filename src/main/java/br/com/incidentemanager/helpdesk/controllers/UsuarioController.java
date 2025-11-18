@@ -110,6 +110,7 @@ public class UsuarioController {
 
 	@PutMapping("/altera-senha")
 	@PodeAcessarSe.EstaAutenticado
+	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void alteraSenha(@RequestBody @Valid AlteraSenhaInput alteraSenhaInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		usuarioService.alteraSenha(usuarioLogado, alteraSenhaInput.getSenhaAtual(), alteraSenhaInput.getNovaSenha(),
