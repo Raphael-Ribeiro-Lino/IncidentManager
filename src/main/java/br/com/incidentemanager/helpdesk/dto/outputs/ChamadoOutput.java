@@ -3,8 +3,6 @@ package br.com.incidentemanager.helpdesk.dto.outputs;
 import java.time.Instant;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import lombok.Getter;
@@ -28,10 +26,8 @@ public class ChamadoOutput {
     
     private String categoria;   
     
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "America/Sao_Paulo")
     private Instant dataCriacao;   
     
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss", timezone = "America/Sao_Paulo")
     private Instant dataUltimaAtualizacao; 
 
     private UsuarioOutput solicitante;      
