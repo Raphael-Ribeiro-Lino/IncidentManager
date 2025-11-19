@@ -55,7 +55,7 @@ public class ChamadoController {
 	@GetMapping("/lista")
 	@PodeAcessarSe.EstaAutenticado
 	public Page<ChamadoOutput> lista(@RequestParam(required = false) String search,
-			@PageableDefault(size = 10, sort = "dataUltimaAtualizacao", direction = Direction.ASC) Pageable pagination) {
+			@PageableDefault(size = 10, sort = "dataUltimaAtualizacao", direction = Direction.DESC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado, search);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
