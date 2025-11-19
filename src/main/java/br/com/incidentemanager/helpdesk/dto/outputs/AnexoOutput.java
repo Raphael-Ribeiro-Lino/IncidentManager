@@ -18,5 +18,7 @@ public class AnexoOutput {
     
     private Instant uploadedAt;
     
+    private Long tamanhoBytes;
+    
     private UsuarioOutput enviadoPor;
 }
