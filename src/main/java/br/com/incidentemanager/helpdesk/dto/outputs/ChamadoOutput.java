@@ -24,8 +24,6 @@ public class ChamadoOutput {
     
     private StatusChamadoEnum status;  
     
-    private String categoria;   
-    
     private Instant dataCriacao;   
     
     private Instant dataUltimaAtualizacao; 
