@@ -30,7 +30,7 @@ public class ExecutaAposInicioDaAplicacao implements ApplicationRunner {
 	public void run(ApplicationArguments args) throws Exception {
 		if (!usuarioService.existeAdm()) {
 			log.info("Criando usuário administrador padrão...");
-			criaUsuarioSeNecessario("SmartDesk Adm", "smartdesk@gmail.com", "(11) 98765-4321", "@PrimeiraSenha123",
+			criaUsuarioSeNecessario("SmartDesk Adm", "contato.smartdesk@gmail.com", "(11) 98765-4321", "@PrimeiraSenha123",
 					true, PerfilEnum.ADMIN);
 		}
 
