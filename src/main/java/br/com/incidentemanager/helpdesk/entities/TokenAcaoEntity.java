@@ -26,7 +26,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "tokens", indexes = { @Index(name = "idx_usuario_id", columnList = "user_id"),
+@Table(name = "tokens_acao", indexes = { @Index(name = "idx_usuario_id", columnList = "user_id"),
 		@Index(name = "idx_hash", columnList = "hash") })
 public class TokenAcaoEntity {
 	@Id
