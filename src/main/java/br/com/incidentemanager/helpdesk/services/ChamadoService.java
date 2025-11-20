@@ -112,7 +112,7 @@ public class ChamadoService {
 		return chamadoRepository.findAllByTecnicoResponsavel(pagination, usuarioLogado);
 	}
 
-	public ChamadoEntity buscaChamadoAtribuidoPorId(Long id, UsuarioEntity usuarioLogado) {
+	public ChamadoEntity buscaAtendimentoPorId(Long id, UsuarioEntity usuarioLogado) {
 		ChamadoEntity chamadoEncontrado = chamadoRepository.findByIdAndTecnicoResponsavel(id, usuarioLogado)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado " + id + " não encontrado"));
 		return chamadoEncontrado;

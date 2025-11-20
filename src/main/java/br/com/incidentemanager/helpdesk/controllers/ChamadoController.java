@@ -88,9 +88,9 @@ public class ChamadoController {
 	}
 
 	@GetMapping("/{id}/tecnico")
-	public ChamadoOutput buscaChamadoAtribuidoPorId(@PathVariable Long id) {
+	public ChamadoOutput buscaAtendimentoPorId(@PathVariable Long id) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		ChamadoEntity chamadoEntity = chamadoService.buscaChamadoAtribuidoPorId(id, usuarioLogado);
+		ChamadoEntity chamadoEntity = chamadoService.buscaAtendimentoPorId(id, usuarioLogado);
 		chamadoService.atualizaStoragePathComLinkTemporario(chamadoEntity);
 		return chamadoConvert.entityToOutput(chamadoEntity);
 	}
@@ -100,7 +100,7 @@ public class ChamadoController {
 	public ChamadoOutput atualizarStatus(@PathVariable Long id,
 			@Valid @RequestBody AlteraStatusChamadoInput alteraStatusChamadoInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		ChamadoEntity chamadoEntity = chamadoService.buscaChamadoAtribuidoPorId(id, usuarioLogado);
+		ChamadoEntity chamadoEntity = chamadoService.buscaAtendimentoPorId(id, usuarioLogado);
 		chamadoService.verificaSeChamadoFoiConcluido(chamadoEntity);
 		ChamadoEntity atualizado = chamadoService.atualizarStatus(chamadoEntity, alteraStatusChamadoInput,
 				usuarioLogado);
