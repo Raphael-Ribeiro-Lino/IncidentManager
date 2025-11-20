@@ -53,10 +53,10 @@ public class ChamadoEntity {
 	@Column(name = "status", nullable = false)
 	private StatusChamadoEnum status;
 
-	@JoinColumn(name = "dataCriacao", nullable = false)
+	@Column(name = "dataCriacao", nullable = false)
 	private Instant dataCriacao;
 	
-	@JoinColumn(name = "dataUltimaAtualizacao", nullable = false)
+	@Column(name = "dataUltimaAtualizacao", nullable = false)
 	private Instant dataUltimaAtualizacao;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
