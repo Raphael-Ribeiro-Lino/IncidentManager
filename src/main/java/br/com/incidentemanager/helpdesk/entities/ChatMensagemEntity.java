@@ -58,7 +58,7 @@ public class ChatMensagemEntity {
     private UsuarioEntity remetente;
     
     @ManyToOne
-    @JoinColumn(name = "destinatario_id", nullable = false)
+    @JoinColumn(name = "destinatario_id", nullable = true)
     private UsuarioEntity destinatario;
     
     @OneToMany(mappedBy = "chatMensagem", cascade = CascadeType.ALL, orphanRemoval = true)
