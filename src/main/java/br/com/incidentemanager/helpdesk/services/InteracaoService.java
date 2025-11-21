@@ -1,6 +1,6 @@
 package br.com.incidentemanager.helpdesk.services;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +9,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.InteracaoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.TipoInteracaoEnum;
 import br.com.incidentemanager.helpdesk.repositories.InteracaoRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -25,8 +26,8 @@ public class InteracaoService {
 		interacao.setChamado(chamado);
 		interacao.setAutor(autor);
 		interacao.setDescricao("Novo chamado aberto no sistema");
-		interacao.setTipo("CHAMADO_ABERTO");
-		interacao.setDataHora(LocalDateTime.now());
+		interacao.setTipo(TipoInteracaoEnum.ABERTURA);
+		interacao.setDataHora(Instant.now());
 		interacao.setVisivelCliente(true);
 		return interacaoRepository.save(interacao);
 	}
@@ -36,9 +37,9 @@ public class InteracaoService {
 			@Valid AlteraStatusChamadoInput alteraStatusChamadoInput) {
 		InteracaoEntity interacao = new InteracaoEntity();
 		interacao.setDescricao(alteraStatusChamadoInput.getObservacao());
-		interacao.setDataHora(LocalDateTime.now());
+		interacao.setDataHora(Instant.now());
 		interacao.setVisivelCliente(alteraStatusChamadoInput.isVisivelCliente());
-		interacao.setTipo("ATUALIZACAO_STATUS");
+		interacao.setTipo(TipoInteracaoEnum.MUDANCA_STATUS);
 		interacao.setAutor(tecnicoTi);
 		interacao.setChamado(chamado);
 		return interacaoRepository.save(interacao);
