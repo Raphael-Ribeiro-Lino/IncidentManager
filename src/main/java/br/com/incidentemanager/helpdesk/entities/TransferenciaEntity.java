@@ -33,11 +33,11 @@ public class TransferenciaEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "tecnico_origem_id", nullable = false)
-	private UsuarioEntity tecnicoOrigem; // Quem solicitou a transferência
+	private UsuarioEntity tecnicoOrigem;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "tecnico_destino_id", nullable = false)
-	private UsuarioEntity tecnicoDestino; // Quem deve aceitar
+	private UsuarioEntity tecnicoDestino;
 
 	@Column(name = "motivo", nullable = false)
 	private String motivo;

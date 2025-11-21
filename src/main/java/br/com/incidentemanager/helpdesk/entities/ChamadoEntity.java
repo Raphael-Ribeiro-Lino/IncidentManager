@@ -79,6 +79,21 @@ public class ChamadoEntity {
 	@OneToMany(mappedBy = "chamado", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<InteracaoEntity> interacoes = new ArrayList<>();
 
+	@Column(name = "ativo", nullable = false)
+    private boolean ativo = true;
+	
+	@Column(name = "avaliacao_nota")
+    private Integer avaliacaoNota;
+	
+	@Column(name = "avaliacao_comentario", length = 1000)
+    private String avaliacaoComentario;
+	
+	@Column(name = "dataFechamento")
+    private Instant dataFechamento;
+	
+	@OneToMany(mappedBy = "chamado", cascade = CascadeType.ALL)
+    private List<TransferenciaEntity> transferencias = new ArrayList<>();
+	
 	@PrePersist
 	public void prePersist() {
 		this.dataCriacao = Instant.now();
