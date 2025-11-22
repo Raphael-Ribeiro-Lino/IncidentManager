@@ -21,16 +21,18 @@ public class TokenAcaoService {
 	private TokenAcaoRepository tokenAcaoRepository;
 
 	public TokenAcaoEntity verificaHash(String hash, TipoTokenEnum tipo) {
-		TokenAcaoEntity tokenAcaoEntity = tokenAcaoRepository.findByHashAndTipo(hash, tipo)
-				.orElseThrow(() -> new NotFoundBusinessException("Token inválido"));
+		TokenAcaoEntity token = tokenAcaoRepository.findByHashAndTipo(hash, tipo)
+				.orElseThrow(() -> new NotFoundBusinessException("Link inválido."));
 
-		if (tokenAcaoEntity.isUsed()) {
-			throw new BadRequestBusinessException("Esse link já foi utilizado. Solicite um novo.");
+		if (token.isUsed()) {
+			throw new BadRequestBusinessException(tipo.getMsgUsado());
 		}
-		if (tokenAcaoEntity.getExpirationTime().isBefore(LocalDateTime.now())) {
-			throw new BadRequestBusinessException("Link expirado. Solicite um novo.");
+
+		if (token.getExpirationTime().isBefore(LocalDateTime.now())) {
+			throw new BadRequestBusinessException(tipo.getMsgExpirado());
 		}
-		return tokenAcaoEntity;
+
+		return token;
 	}
 
 	@Transactional
