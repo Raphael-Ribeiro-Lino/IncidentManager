@@ -25,39 +25,37 @@ public class SecurityConfigurations {
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-		.authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests.requestMatchers("/**").permitAll()
-				.anyRequest().authenticated())
+				.authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests.requestMatchers("/**").permitAll()
+						.anyRequest().authenticated())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.csrf(csrf -> csrf.disable());
 		return http.build();
 	}
-	
+
 	@Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Libera a origem do Angular
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
-        
-        // Libera os métodos HTTP
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
-        
-        // Libera os headers (Authorization é crucial para o Bearer Token)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-xsrf-token", 
-                                                      "Access-Control-Allow-Headers", "Origin", "Accept", "X-Requested-With"));
-        
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-	
+	CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-xsrf-token",
+				"Access-Control-Allow-Headers", "Origin", "Accept", "X-Requested-With"));
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
+	}
+
 	@Bean
 	PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-	
+
 	@Bean
-	AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+	AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+			throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
 	}
 }
