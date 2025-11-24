@@ -79,9 +79,10 @@ public class UsuarioController {
 	@GetMapping("/lista")
 	@PodeAcessarSe.TemPerfilAdmEmpresa
 	public Page<UsuarioOutput> lista(@RequestParam(required = false) String search,
+			@RequestParam(required = false) Boolean ativo,
 			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado, search);
+		Page<UsuarioEntity> usuarios = usuarioService.lista(pagination, usuarioLogado, search, ativo);
 		return usuarioConvert.pageEntityToPageOutput(usuarios);
 	}
 
@@ -147,7 +148,7 @@ public class UsuarioController {
 		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.verificaHash(hash, TipoTokenEnum.CRIACAO_SENHA);
 		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(), senhaInput.getRepetirSenha());
 	}
-	
+
 	@PostMapping("/{id}/reenviar-email/definir-senha")
 	@PodeAcessarSe.TemPerfilAdmEmpresa
 	@ResponseStatus(HttpStatus.NO_CONTENT)
