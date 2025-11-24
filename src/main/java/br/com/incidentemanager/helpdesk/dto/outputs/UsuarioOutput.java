@@ -21,4 +21,6 @@ public class UsuarioOutput {
 	private EmpresaOutput empresa;
 	
 	private PerfilEnum perfil;
+	
+	private boolean podeReenviarEmail;
 }

@@ -105,17 +105,17 @@ public class UsuarioService {
 	}
 
 	public Page<UsuarioEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String search) {
-        EmpresaEntity empresaEntity = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
-                : usuarioLogado.getEmpresa();
+		EmpresaEntity empresaEntity = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
+				: usuarioLogado.getEmpresa();
 
-        if (search != null && !search.isBlank()) {
-            return usuarioRepository.findByEmpresaAndNomeOrEmailExcluindoLogado(
-                    empresaEntity, search, usuarioLogado.getId(), pagination);
-        } else {
-            return usuarioRepository.findAllByEmpresaOptionalExcluindoLogado(
-                    empresaEntity, usuarioLogado.getId(), pagination);
-        }
-    }
+		if (search != null && !search.isBlank()) {
+			return usuarioRepository.findByEmpresaAndNomeOrEmailExcluindoLogado(empresaEntity, search,
+					usuarioLogado.getId(), pagination);
+		} else {
+			return usuarioRepository.findAllByEmpresaOptionalExcluindoLogado(empresaEntity, usuarioLogado.getId(),
+					pagination);
+		}
+	}
 
 	@Transactional
 	public UsuarioEntity altera(UsuarioEntity usuarioLogado) {
@@ -209,7 +209,10 @@ public class UsuarioService {
 	}
 
 	@Transactional
-	private void enviaEmailDefinirSenha(UsuarioEntity usuarioEntity) {
+	public void enviaEmailDefinirSenha(UsuarioEntity usuarioEntity) {
+		if (usuarioEntity.getSenha() != null && !usuarioEntity.getSenha().isBlank()) {
+			throw new BadRequestBusinessException("Este usuário já possui uma senha definida.");
+		}
 		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.renovarTokenDoUsuario(usuarioEntity,
 				TipoTokenEnum.CRIACAO_SENHA);
 		LayoutEmailEntity layout = layoutEmailService.buscaPorNome("Criação de senha de acesso");

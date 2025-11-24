@@ -10,6 +10,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.services.TokenAcaoService;
 import jakarta.validation.Valid;
 
 @Component
@@ -18,12 +19,18 @@ public class UsuarioConvert {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	@Autowired
+	private TokenAcaoService tokenAcaoService;
+
 	public UsuarioEntity inputToEntity(@Valid UsuarioInput usuarioInput) {
 		return modelMapper.map(usuarioInput, UsuarioEntity.class);
 	}
 
 	public UsuarioOutput entityToOutput(UsuarioEntity usuarioEntity) {
-		return modelMapper.map(usuarioEntity, UsuarioOutput.class);
+		UsuarioOutput output = modelMapper.map(usuarioEntity, UsuarioOutput.class);
+		boolean expirado = tokenAcaoService.isTokenExpirado(usuarioEntity);
+		output.setPodeReenviarEmail(expirado);
+		return output;
 	}
 
 	public Page<UsuarioOutput> pageEntityToPageOutput(Page<UsuarioEntity> usuarios) {

@@ -1,6 +1,7 @@
 package br.com.incidentemanager.helpdesk.services;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,5 +58,14 @@ public class TokenAcaoService {
 		tokenAcaoEntity.setUsed(false);
 		tokenAcaoEntity.setTipo(tipo);
 		return tokenAcaoRepository.save(tokenAcaoEntity);
+	}
+
+	public boolean isTokenExpirado(UsuarioEntity usuario) {
+		Optional<TokenAcaoEntity> tokenOpt = tokenAcaoRepository.findByUsuarioAndUsedFalseAndTipo(usuario,
+				TipoTokenEnum.CRIACAO_SENHA);
+		if (tokenOpt.isPresent()) {
+			return tokenOpt.get().getExpirationTime().isBefore(LocalDateTime.now());
+		}
+		return false;
 	}
 }

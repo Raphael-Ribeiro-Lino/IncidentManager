@@ -7,7 +7,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +38,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping(ControllerConfig.PRE_URL + "/usuario")
-@CrossOrigin(origins = { "http://localhost", "http://localhost:4200", "http://localhost:4200/*" })
 public class UsuarioController {
 
 	@Autowired
@@ -148,6 +146,15 @@ public class UsuarioController {
 	public void definirSenha(@PathVariable String hash, @RequestBody @Valid SenhaInput senhaInput) {
 		TokenAcaoEntity tokenAcaoEntity = tokenAcaoService.verificaHash(hash, TipoTokenEnum.CRIACAO_SENHA);
 		usuarioService.definirSenha(tokenAcaoEntity, senhaInput.getSenha(), senhaInput.getRepetirSenha());
+	}
+	
+	@PostMapping("/{id}/reenviar-email/definir-senha")
+	@PodeAcessarSe.TemPerfilAdmEmpresa
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void reenviarEmailDefinirSenha(@PathVariable Long id) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
+		usuarioService.enviaEmailDefinirSenha(usuarioEncontrado);
 	}
 
 }
