@@ -24,20 +24,25 @@ public class EmpresaService {
 	}
 
 	private void existeCnpj(String cnpj) {
-		if(empresaRepository.findByCnpj(cnpj).isPresent()) {
+		if (empresaRepository.findByCnpj(cnpj).isPresent()) {
 			throw new BadRequestBusinessException("Este CNPJ já está em uso por outra empresa.");
 		}
 	}
 
 	public EmpresaEntity buscaPorId(Long idEmpresa) {
-		return empresaRepository.findById(idEmpresa).orElseThrow(() -> new NotFoundBusinessException("Empresa "+ idEmpresa +" não encontrada"));
+		return empresaRepository.findById(idEmpresa)
+				.orElseThrow(() -> new NotFoundBusinessException("Empresa " + idEmpresa + " não encontrada"));
 	}
 
-	public Page<EmpresaEntity> lista(Pageable pagination) {
-		return empresaRepository.findAll(pagination);
+	public Page<EmpresaEntity> listarComFiltros(String search, Boolean ativo, Pageable pagination) {
+		return empresaRepository.buscarComFiltros(search, ativo, pagination);
 	}
 
-	public Page<EmpresaEntity> listaPorNomeOuCnpj(String termo, Pageable pagination) {
-	    return empresaRepository.findByNomeContainingIgnoreCaseOrCnpjContainingIgnoreCase(termo, termo, pagination);
-	}
+//	public Page<EmpresaEntity> lista(Pageable pagination) {
+//		return empresaRepository.findAll(pagination);
+//	}
+//
+//	public Page<EmpresaEntity> listaPorNomeOuCnpj(String termo, Pageable pagination) {
+//	    return empresaRepository.findByNomeContainingIgnoreCaseOrCnpjContainingIgnoreCase(termo, termo, pagination);
+//	}
 }

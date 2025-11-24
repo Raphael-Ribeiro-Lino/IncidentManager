@@ -46,13 +46,9 @@ public class EmpresaController {
 	@GetMapping
 	@PodeAcessarSe.TemPerfilAdm
 	public Page<EmpresaOutput> listar(@RequestParam(required = false) String search,
+			@RequestParam(required = false) Boolean ativo,
 			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
-		Page<EmpresaEntity> empresas;
-		if (search != null && !search.isBlank()) {
-			empresas = empresaService.listaPorNomeOuCnpj(search, pagination);
-		} else {
-			empresas = empresaService.lista(pagination);
-		}
+		Page<EmpresaEntity> empresas = empresaService.listarComFiltros(search, ativo, pagination);
 		return empresaConvert.pageEntityToPageOutput(empresas);
 	}
 }
