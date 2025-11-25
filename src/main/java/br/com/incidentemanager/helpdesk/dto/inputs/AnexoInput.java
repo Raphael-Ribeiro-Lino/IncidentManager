@@ -25,7 +25,6 @@ public class AnexoInput {
     @NotNull(message = "O tipo do anexo é obrigatório.")
     private TipoAnexoEnum tipo;
     
-    @NotNull(message = "O arquivo é obrigatório.")
     private MultipartFile arquivo;
 	
 }

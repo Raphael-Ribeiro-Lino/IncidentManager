@@ -1,5 +1,6 @@
 package br.com.incidentemanager.helpdesk.dto.inputs;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
@@ -26,5 +27,5 @@ public class ChamadoInput {
     private PrioridadeEnum prioridade;
     
     @Valid
-    private List<AnexoInput> anexos;
+    private List<AnexoInput> anexos= new ArrayList<>();
 }
