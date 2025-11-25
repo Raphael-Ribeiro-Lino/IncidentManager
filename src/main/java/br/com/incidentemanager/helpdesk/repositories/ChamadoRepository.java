@@ -1,5 +1,6 @@
 package br.com.incidentemanager.helpdesk.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 
 public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 
@@ -43,5 +45,7 @@ public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 	Page<ChamadoEntity> findAllByTecnicoResponsavel(Pageable pagination, UsuarioEntity tecnicoResponsavel);
 
 	Optional<ChamadoEntity> findByIdAndTecnicoResponsavel(Long id, UsuarioEntity tecnicoResponsavel);
+
+	List<ChamadoEntity> findBySolicitanteAndStatusNot(UsuarioEntity solicitante, StatusChamadoEnum status);
 
 }

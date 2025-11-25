@@ -1,5 +1,6 @@
 package br.com.incidentemanager.helpdesk.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -46,5 +47,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 	Page<UsuarioEntity> listarUsuariosComFiltros(@Param("empresa") EmpresaEntity empresa,
 			@Param("search") String search, @Param("ativo") Boolean ativo,
 			@Param("usuarioLogadoId") Long usuarioLogadoId, Pageable pagination);
+
+	List<UsuarioEntity> findByEmpresa(EmpresaEntity empresa);
 
 }

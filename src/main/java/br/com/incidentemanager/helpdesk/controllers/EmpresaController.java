@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,5 +57,13 @@ public class EmpresaController {
 	public EmpresaOutput buscarPorId(@PathVariable Long id) {
 		EmpresaEntity empresaEntity = empresaService.buscaPorId(id);
 		return empresaConvert.entityToOutput(empresaEntity);
+	}
+	
+	@PutMapping("/{id}/alterar-dados")
+	@PodeAcessarSe.TemPerfilAdm
+	public EmpresaOutput alterarDados(@PathVariable Long id, @RequestBody @Valid EmpresaInput empresaInput) {
+		EmpresaEntity empresaEntity = empresaService.buscaPorId(id);
+		empresaConvert.copyInputToEntity(empresaInput, empresaEntity);
+		return empresaConvert.entityToOutput(empresaService.alterar(empresaEntity));
 	}
 }

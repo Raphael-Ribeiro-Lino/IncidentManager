@@ -28,4 +28,8 @@ public class EmpresaConvert {
 		return empresas.map(this::entityToOutput);
 	}
 
+	public void copyInputToEntity(@Valid EmpresaInput empresaInput, EmpresaEntity empresaEntity) {
+		modelMapper.map(empresaInput, empresaEntity);
+	}
+
 }
