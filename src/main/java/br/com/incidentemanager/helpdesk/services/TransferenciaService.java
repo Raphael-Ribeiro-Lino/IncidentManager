@@ -120,4 +120,9 @@ public class TransferenciaService {
 				search, pagination);
 	}
 
+	public Page<TransferenciaEntity> listarSolicitacoesEnviadas(UsuarioEntity tecnicoLogado, String search,
+			Pageable pagination) {
+		return transferenciaRepository.findMinhasSolicitacoesEnviadas(tecnicoLogado, search, pagination);
+	}
+
 }

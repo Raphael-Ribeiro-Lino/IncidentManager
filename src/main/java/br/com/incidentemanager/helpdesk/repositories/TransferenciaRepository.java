@@ -28,4 +28,17 @@ public interface TransferenciaRepository extends JpaRepository<TransferenciaEnti
 			""")
 	Page<TransferenciaEntity> findMinhasPendenciasFiltradas(@Param("tecnicoDestino") UsuarioEntity tecnicoDestino,
 			@Param("status") StatusTransferenciaEnum status, @Param("search") String search, Pageable pageable);
+
+	@Query("""
+			SELECT t FROM TransferenciaEntity t
+			WHERE t.tecnicoOrigem = :tecnicoOrigem
+			AND (
+			    :search IS NULL OR
+			    LOWER(t.chamado.titulo) LIKE LOWER(CONCAT('%', :search, '%')) OR
+			    LOWER(t.chamado.protocolo) LIKE LOWER(CONCAT('%', :search, '%')) OR
+			    LOWER(t.tecnicoDestino.nome) LIKE LOWER(CONCAT('%', :search, '%'))
+			)
+			""")
+	Page<TransferenciaEntity> findMinhasSolicitacoesEnviadas(@Param("tecnicoOrigem") UsuarioEntity tecnicoOrigem,
+			@Param("search") String search, Pageable pageable);
 }

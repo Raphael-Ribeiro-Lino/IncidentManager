@@ -55,4 +55,14 @@ public class TransferenciaController {
 		return transferenciaConvert.pageEntityToPageOutput(pendencias);
 	}
 
+	@GetMapping("/enviadas")
+	@PodeAcessarSe.TemPerfilTecnicoTi
+	public Page<TransferenciaOutput> listarSolicitacoesEnviadas(@RequestParam(required = false) String search,
+			@PageableDefault(size = 10, sort = "dataSolicitacao", direction = Direction.DESC) Pageable pagination) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		Page<TransferenciaEntity> enviadas = transferenciaService.listarSolicitacoesEnviadas(usuarioLogado, search,
+				pagination);
+		return transferenciaConvert.pageEntityToPageOutput(enviadas);
+	}
+
 }
