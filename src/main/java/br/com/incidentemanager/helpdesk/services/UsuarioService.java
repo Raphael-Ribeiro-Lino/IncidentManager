@@ -261,4 +261,15 @@ public class UsuarioService {
 		}
 	}
 
+	public Page<UsuarioEntity> listarTecnicosParaTransferencia(UsuarioEntity usuarioLogado, String search,
+			Pageable pagination) {
+		return usuarioRepository.findTecnicosParaTransferencia(
+                pagination,
+                usuarioLogado.getEmpresa(),
+                PerfilEnum.TECNICO_TI,
+                usuarioLogado.getId(),
+                search
+        );
+	}
+
 }

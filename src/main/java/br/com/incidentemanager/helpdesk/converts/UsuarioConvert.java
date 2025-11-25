@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraMeusDadosInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
+import br.com.incidentemanager.helpdesk.dto.outputs.TecnicoSelecaoOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.services.TokenAcaoService;
@@ -43,5 +44,13 @@ public class UsuarioConvert {
 
 	public void copyInputToEntity(UsuarioEntity usuarioEncontrado, @Valid AlteraUsuarioInput alteraUsuarioInput) {
 		modelMapper.map(alteraUsuarioInput, usuarioEncontrado);
+	}
+
+	public TecnicoSelecaoOutput entityToTecnicoOutput(UsuarioEntity tecnico) {
+		return modelMapper.map(tecnico, TecnicoSelecaoOutput.class);
+	}
+	
+	public Page<TecnicoSelecaoOutput> pageEntityToPageTecnicoOutput(Page<UsuarioEntity> tecnicos) {
+		return tecnicos.map(this::entityToTecnicoOutput);
 	}
 }

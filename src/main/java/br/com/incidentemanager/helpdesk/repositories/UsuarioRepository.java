@@ -50,4 +50,20 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 
 	List<UsuarioEntity> findByEmpresa(EmpresaEntity empresa);
 
+	@Query("""
+			SELECT u FROM UsuarioEntity u
+			WHERE u.empresa = :empresa
+			AND u.perfil = :perfil
+			AND u.ativo = true
+			AND u.id != :idExceto
+			AND (
+			    :search IS NULL OR
+			    LOWER(u.nome) LIKE LOWER(CONCAT('%', :search, '%')) OR
+			    LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+			)
+			ORDER BY u.nome ASC
+			""")
+	Page<UsuarioEntity> findTecnicosParaTransferencia(Pageable pageable, @Param("empresa") EmpresaEntity empresa,
+			@Param("perfil") PerfilEnum perfil, @Param("idExceto") Long idExceto, @Param("search") String search);
+
 }

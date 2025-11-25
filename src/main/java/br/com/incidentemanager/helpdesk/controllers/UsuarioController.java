@@ -26,6 +26,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.AlteraUsuarioInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.EmailRedefinirSenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.SenhaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
+import br.com.incidentemanager.helpdesk.dto.outputs.TecnicoSelecaoOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.UsuarioOutput;
 import br.com.incidentemanager.helpdesk.entities.TokenAcaoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -157,5 +158,14 @@ public class UsuarioController {
 		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
 		usuarioService.enviaEmailDefinirSenha(usuarioEncontrado);
 	}
+	
+	@GetMapping("/tecnicos-disponiveis-transferencia")
+    @PodeAcessarSe.TemPerfilTecnicoTi
+	public Page<TecnicoSelecaoOutput> listarTecnicosTransferencia(@RequestParam(required = false) String search,
+			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+        Page<UsuarioEntity> tecnicos = usuarioService.listarTecnicosParaTransferencia(usuarioLogado, search, pagination);
+		return usuarioConvert.pageEntityToPageTecnicoOutput(tecnicos);
+    }
 
 }
