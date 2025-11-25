@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,5 +49,12 @@ public class EmpresaController {
 			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
 		Page<EmpresaEntity> empresas = empresaService.listarComFiltros(search, ativo, pagination);
 		return empresaConvert.pageEntityToPageOutput(empresas);
+	}
+	
+	@GetMapping("/{id}")
+	@PodeAcessarSe.TemPerfilAdm
+	public EmpresaOutput buscarPorId(@PathVariable Long id) {
+		EmpresaEntity empresaEntity = empresaService.buscaPorId(id);
+		return empresaConvert.entityToOutput(empresaEntity);
 	}
 }
