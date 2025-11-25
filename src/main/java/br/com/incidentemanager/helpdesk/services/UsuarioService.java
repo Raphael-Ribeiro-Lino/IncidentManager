@@ -1,6 +1,7 @@
 package br.com.incidentemanager.helpdesk.services;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,15 +12,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.UsuarioInput;
+import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.EmpresaEntity;
 import br.com.incidentemanager.helpdesk.entities.LayoutEmailEntity;
 import br.com.incidentemanager.helpdesk.entities.TokenAcaoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
+import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.enums.TipoTokenEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.SafeResponseBusinessException;
+import br.com.incidentemanager.helpdesk.repositories.ChamadoRepository;
 import br.com.incidentemanager.helpdesk.repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -43,6 +47,9 @@ public class UsuarioService {
 
 	@Autowired
 	private EmailService emailService;
+	
+	@Autowired
+	private ChamadoRepository chamadoRepository;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -113,9 +120,24 @@ public class UsuarioService {
 	}
 
 	@Transactional
-	public UsuarioEntity altera(UsuarioEntity usuarioLogado) {
-		return usuarioRepository.save(usuarioLogado);
+	public UsuarioEntity altera(UsuarioEntity usuario) {
+		if (!usuario.isAtivo()) {
+            inativarChamadosDoUsuario(usuario);
+        }
+        return usuarioRepository.save(usuario);
 	}
+	
+	@Transactional
+	private void inativarChamadosDoUsuario(UsuarioEntity usuario) {
+        List<ChamadoEntity> chamadosAbertos = chamadoRepository.findBySolicitanteAndStatusNot(
+                usuario, 
+                StatusChamadoEnum.CONCLUIDO
+        );
+        for (ChamadoEntity chamado : chamadosAbertos) {
+            chamado.setAtivo(false);
+        }
+        chamadoRepository.saveAll(chamadosAbertos);
+    }
 
 	public void verificaEmailParaAlterar(String emailEncontrado, String emailAlterado) {
 		Optional<UsuarioEntity> usuarioEntity = usuarioRepository.findByEmail(emailAlterado);
