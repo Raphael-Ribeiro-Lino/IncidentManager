@@ -105,7 +105,7 @@ public class TransferenciaService {
 
 		} else {
 			if (input.getMotivoRecusa() == null || input.getMotivoRecusa().isBlank()) {
-				throw new IllegalArgumentException("O motivo é obrigatório ao recusar uma transferência.");
+				throw new BadRequestBusinessException("O motivo é obrigatório ao recusar uma transferência.");
 			}
 			transferencia.setStatus(StatusTransferenciaEnum.RECUSADA);
 			transferencia.setMotivoRecusa(input.getMotivoRecusa());
@@ -123,6 +123,24 @@ public class TransferenciaService {
 	public Page<TransferenciaEntity> listarSolicitacoesEnviadas(UsuarioEntity tecnicoLogado, String search,
 			Pageable pagination) {
 		return transferenciaRepository.findMinhasSolicitacoesEnviadas(tecnicoLogado, search, pagination);
+	}
+
+	@Transactional
+	public void cancelar(Long transferenciaId, UsuarioEntity tecnicoLogado) {
+		TransferenciaEntity transferencia = transferenciaRepository.findById(transferenciaId)
+				.orElseThrow(() -> new NotFoundBusinessException("Transferência não encontrada"));
+		if (!transferencia.getTecnicoOrigem().getId().equals(tecnicoLogado.getId())) {
+			throw new BadRequestBusinessException("Você não tem permissão para cancelar esta solicitação.");
+		}
+
+		if (!StatusTransferenciaEnum.PENDENTE.equals(transferencia.getStatus())) {
+			throw new BadRequestBusinessException(
+					"Não é possível cancelar. A solicitação já foi " + transferencia.getStatus());
+		}
+		transferencia.setStatus(StatusTransferenciaEnum.CANCELADA);
+		transferencia.setDataResposta(Instant.now());
+		transferencia.setMotivoRecusa("Cancelada pelo solicitante.");
+		transferenciaRepository.save(transferencia);
 	}
 
 }
