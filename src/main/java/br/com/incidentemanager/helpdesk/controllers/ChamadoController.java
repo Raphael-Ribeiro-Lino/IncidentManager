@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
@@ -21,6 +23,7 @@ import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.ChamadoConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.SolicitarTransferenciaInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -28,6 +31,7 @@ import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.services.ChamadoService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
+import br.com.incidentemanager.helpdesk.services.TransferenciaService;
 import jakarta.validation.Valid;
 
 @RestController
@@ -42,6 +46,9 @@ public class ChamadoController {
 
 	@Autowired
 	private TokenService tokenService;
+
+	@Autowired
+	private TransferenciaService transferenciaService;
 
 	@PostMapping(consumes = { "multipart/form-data" })
 	@PodeAcessarSe.EstaAutenticado
@@ -85,7 +92,8 @@ public class ChamadoController {
 	public Page<ChamadoOutput> listaMeusAtentimentos(@PageableDefault(size = 10) Pageable pagination,
 			@RequestParam(required = false) PrioridadeEnum prioridade, @RequestParam(required = false) String busca) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		Page<ChamadoEntity> chamados = chamadoService.listaMeusAtentimentos(pagination, usuarioLogado, prioridade, busca);
+		Page<ChamadoEntity> chamados = chamadoService.listaMeusAtentimentos(pagination, usuarioLogado, prioridade,
+				busca);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
 
@@ -107,6 +115,14 @@ public class ChamadoController {
 		ChamadoEntity atualizado = chamadoService.atualizarStatus(chamadoEntity, alteraStatusChamadoInput,
 				usuarioLogado);
 		return chamadoConvert.entityToOutput(atualizado);
+	}
+
+	@PostMapping("/{id}/solicitar-transferencia")
+	@PodeAcessarSe.TemPerfilTecnicoTi
+	@ResponseStatus(HttpStatus.CREATED)
+	public void solicitarTransferencia(@PathVariable Long id, @RequestBody @Valid SolicitarTransferenciaInput input) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		transferenciaService.solicitar(id, input, usuarioLogado);
 	}
 
 }
