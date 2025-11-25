@@ -24,6 +24,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.services.ChamadoService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
 import jakarta.validation.Valid;
@@ -79,9 +80,10 @@ public class ChamadoController {
 
 	@GetMapping("/tecnico")
 	@PodeAcessarSe.TemPerfilTecnicoTi
-	public Page<ChamadoOutput> listaMeusAtentimentos(@PageableDefault(size = 10) Pageable pagination) {
+	public Page<ChamadoOutput> listaMeusAtentimentos(@PageableDefault(size = 10) Pageable pagination,
+			@RequestParam(required = false) PrioridadeEnum prioridade, @RequestParam(required = false) String busca) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		Page<ChamadoEntity> chamados = chamadoService.listaMeusAtentimentos(pagination, usuarioLogado);
+		Page<ChamadoEntity> chamados = chamadoService.listaMeusAtentimentos(pagination, usuarioLogado, prioridade, busca);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
 

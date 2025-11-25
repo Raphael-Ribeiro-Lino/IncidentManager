@@ -7,9 +7,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 
 public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
@@ -32,17 +34,29 @@ public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 	Optional<ChamadoEntity> findByIdAndSolicitante(Long id, UsuarioEntity solicitante);
 
 	@Query("""
-			    SELECT c FROM ChamadoEntity c
-			    WHERE c.tecnicoResponsavel = :tecnicoResponsavel
-			    ORDER BY
-			        CASE c.prioridade
-			            WHEN 'CRITICA' THEN 1
-			            WHEN 'ALTA' THEN 2
-			            WHEN 'MEDIA' THEN 3
-			            WHEN 'BAIXA' THEN 4
-			        END
+			SELECT c FROM ChamadoEntity c
+			WHERE c.tecnicoResponsavel = :tecnico
+			AND c.ativo = true
+			AND c.status != :status
+			AND (:prioridade IS NULL OR c.prioridade = :prioridade)
+			AND (
+			    :busca IS NULL OR
+			    LOWER(c.titulo) LIKE LOWER(CONCAT('%', :busca, '%')) OR
+			    LOWER(c.protocolo) LIKE LOWER(CONCAT('%', :busca, '%'))
+			)
+			ORDER BY
+			    CASE c.prioridade
+			        WHEN 'CRITICA' THEN 1
+			        WHEN 'ALTA' THEN 2
+			        WHEN 'MEDIA' THEN 3
+			        WHEN 'BAIXA' THEN 4
+			        ELSE 5
+			    END,
+			    c.dataCriacao ASC
 			""")
-	Page<ChamadoEntity> findAllByTecnicoResponsavel(Pageable pagination, UsuarioEntity tecnicoResponsavel);
+	Page<ChamadoEntity> findAllByTecnicoResponsavelFiltrado(Pageable pagination,
+			@Param("tecnico") UsuarioEntity tecnicoResponsavel, @Param("prioridade") PrioridadeEnum prioridade,
+			@Param("status") StatusChamadoEnum status, @Param("busca") String busca);
 
 	Optional<ChamadoEntity> findByIdAndTecnicoResponsavel(Long id, UsuarioEntity tecnicoResponsavel);
 

@@ -15,6 +15,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.entities.AnexoEntity;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
+import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
@@ -108,8 +109,14 @@ public class ChamadoService {
 		}
 	}
 
-	public Page<ChamadoEntity> listaMeusAtentimentos(Pageable pagination, UsuarioEntity usuarioLogado) {
-		return chamadoRepository.findAllByTecnicoResponsavel(pagination, usuarioLogado);
+	public Page<ChamadoEntity> listaMeusAtentimentos(Pageable pagination, UsuarioEntity usuarioLogado, PrioridadeEnum prioridade, String busca) {
+		return chamadoRepository.findAllByTecnicoResponsavelFiltrado(
+	            pagination, 
+	            usuarioLogado, 
+	            prioridade, 
+	            StatusChamadoEnum.CONCLUIDO,
+	            busca
+	    );
 	}
 
 	public ChamadoEntity buscaAtendimentoPorId(Long id, UsuarioEntity usuarioLogado) {
