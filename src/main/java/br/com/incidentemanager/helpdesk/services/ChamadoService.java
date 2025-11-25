@@ -72,12 +72,8 @@ public class ChamadoService {
 		chamadoEntity.setTecnicoResponsavel(tecnicoComMenosChamados);
 	}
 
-	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String searchTerm) {
-		if (searchTerm != null && !searchTerm.isBlank()) {
-			return chamadoRepository.findAllBySolicitanteAndSearchTerm(pagination, usuarioLogado, searchTerm);
-		}
-
-		return chamadoRepository.findAllBySolicitante(pagination, usuarioLogado);
+	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String searchTerm, StatusChamadoEnum status) {
+		return chamadoRepository.findAllBySolicitanteFiltrado(pagination, usuarioLogado, searchTerm, status);
 	}
 
 	public ChamadoEntity buscaPorId(Long id, UsuarioEntity usuarioLogado) {

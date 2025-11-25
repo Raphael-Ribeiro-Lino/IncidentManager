@@ -25,6 +25,7 @@ import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
+import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.services.ChamadoService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
 import jakarta.validation.Valid;
@@ -54,9 +55,10 @@ public class ChamadoController {
 	@GetMapping("/lista")
 	@PodeAcessarSe.EstaAutenticado
 	public Page<ChamadoOutput> lista(@RequestParam(required = false) String search,
+			@RequestParam(required = false) StatusChamadoEnum status,
 			@PageableDefault(size = 10, sort = "dataUltimaAtualizacao", direction = Direction.DESC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado, search);
+		Page<ChamadoEntity> chamados = chamadoService.lista(pagination, usuarioLogado, search, status);
 		return chamadoConvert.pageEntityToPageOutput(chamados);
 	}
 

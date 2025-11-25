@@ -16,19 +16,6 @@ import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 
 public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 
-	@Query("""
-			SELECT c FROM ChamadoEntity c
-			WHERE c.solicitante = :solicitante
-			AND (
-			    UPPER(c.titulo) LIKE UPPER(CONCAT('%', :searchTerm, '%')) OR
-			    UPPER(c.descricao) LIKE UPPER(CONCAT('%', :searchTerm, '%')) OR
-			    UPPER(c.protocolo) LIKE UPPER(CONCAT('%', :searchTerm, '%'))
-			)
-			ORDER BY c.dataUltimaAtualizacao ASC
-			""")
-	Page<ChamadoEntity> findAllBySolicitanteAndSearchTerm(Pageable pagination, UsuarioEntity solicitante,
-			String searchTerm);
-
 	Page<ChamadoEntity> findAllBySolicitante(Pageable pagination, UsuarioEntity solicitante);
 
 	Optional<ChamadoEntity> findByIdAndSolicitante(Long id, UsuarioEntity solicitante);
@@ -62,4 +49,18 @@ public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 
 	List<ChamadoEntity> findBySolicitanteAndStatusNot(UsuarioEntity solicitante, StatusChamadoEnum status);
 
+	@Query("""
+			SELECT c FROM ChamadoEntity c
+			WHERE c.solicitante = :solicitante
+			AND (:status IS NULL OR c.status = :status)
+			AND (
+			    :searchTerm IS NULL OR
+			    UPPER(c.titulo) LIKE UPPER(CONCAT('%', :searchTerm, '%')) OR
+			    UPPER(c.descricao) LIKE UPPER(CONCAT('%', :searchTerm, '%')) OR
+			    UPPER(c.protocolo) LIKE UPPER(CONCAT('%', :searchTerm, '%'))
+			)
+			""")
+	Page<ChamadoEntity> findAllBySolicitanteFiltrado(Pageable pagination,
+			@Param("solicitante") UsuarioEntity solicitante, @Param("searchTerm") String searchTerm,
+			@Param("status") StatusChamadoEnum status);
 }
