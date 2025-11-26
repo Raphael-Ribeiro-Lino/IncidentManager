@@ -13,6 +13,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AnexoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AvaliacaoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.ReabrirChamadoInput;
 import br.com.incidentemanager.helpdesk.entities.AnexoEntity;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -127,8 +128,9 @@ public class ChamadoService {
 					"O técnico não pode encerrar o chamado diretamente. Altere para 'RESOLVIDO' e aguarde a avaliação do cliente.");
 		}
 		if (StatusChamadoEnum.ABERTO.equals(alteraStatusChamadoInput.getStatus())) {
-            throw new BadRequestBusinessException("Não é possível voltar o chamado para ABERTO. Use EM_ATENDIMENTO ou TRIAGEM.");
-       }
+			throw new BadRequestBusinessException(
+					"Não é possível voltar o chamado para ABERTO. Use EM_ATENDIMENTO ou TRIAGEM.");
+		}
 		chamadoEntity.setStatus(alteraStatusChamadoInput.getStatus());
 		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
 		chamadoRepository.save(chamadoEntity);
@@ -157,5 +159,29 @@ public class ChamadoService {
 		chamadoEntity.setDataFechamento(Instant.now());
 		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
 		return chamadoRepository.save(chamadoEntity);
+	}
+
+	@Transactional
+	public ChamadoEntity reabrir(Long id, @Valid ReabrirChamadoInput reabrirChamadoInput, UsuarioEntity usuarioLogado,
+			ChamadoEntity chamadoEntity) {
+		if (!StatusChamadoEnum.RESOLVIDO.equals(chamadoEntity.getStatus())
+				&& !StatusChamadoEnum.CONCLUIDO.equals(chamadoEntity.getStatus())) {
+			throw new BadRequestBusinessException("Apenas chamados Resolvidos ou Concluídos podem ser reabertos.");
+		}
+		chamadoEntity.setStatus(StatusChamadoEnum.REABERTO);
+		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
+		if (chamadoEntity.getDataFechamento() != null) {
+			chamadoEntity.setDataFechamento(null);
+		}
+		registrarInteracaoDeReabertura(chamadoEntity, usuarioLogado, reabrirChamadoInput.getMotivo());
+		return chamadoRepository.save(chamadoEntity);
+	}
+	
+	private void registrarInteracaoDeReabertura(ChamadoEntity chamado, UsuarioEntity autor, String motivo) {
+		AlteraStatusChamadoInput inputLog = new AlteraStatusChamadoInput();
+		inputLog.setStatus(StatusChamadoEnum.REABERTO);
+		inputLog.setObservacao("CHAMADO REABERTO PELO CLIENTE. Motivo: " + motivo);
+		inputLog.setVisivelCliente(true);
+		interacaoService.registrarNovaInteracao(chamado, autor, inputLog);
 	}
 }

@@ -24,6 +24,7 @@ import br.com.incidentemanager.helpdesk.converts.ChamadoConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AvaliacaoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.ReabrirChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.SolicitarTransferenciaInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
@@ -136,4 +137,16 @@ public class ChamadoController {
 		return chamadoConvert.entityToOutput(chamadoAvaliado);
 	}
 
+	
+	@PostMapping("/{id}/reabrir")
+	@PodeAcessarSe.EstaAutenticado
+	@ResponseStatus(HttpStatus.CREATED)
+	public ChamadoOutput reabrirChamado(
+			@PathVariable Long id, 
+			@RequestBody @Valid ReabrirChamadoInput reabrirChamadoInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
+		ChamadoEntity chamadoReaberto = chamadoService.reabrir(id, reabrirChamadoInput, usuarioLogado, chamadoEntity);
+		return chamadoConvert.entityToOutput(chamadoReaberto);
+	}
 }
