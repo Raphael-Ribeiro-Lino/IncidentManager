@@ -1,12 +1,17 @@
 package br.com.incidentemanager.helpdesk.converts;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
+import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoDetalhadoOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
+import br.com.incidentemanager.helpdesk.dto.outputs.InteracaoOutput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import jakarta.validation.Valid;
 
@@ -26,6 +31,37 @@ public class ChamadoConvert {
 
 	public Page<ChamadoOutput> pageEntityToPageOutput(Page<ChamadoEntity> chamados) {
 		return chamados.map(this::entityToOutput);
+	}
+	
+	public ChamadoDetalhadoOutput entityToDetalhadoOutput(ChamadoEntity entity) {
+		// 1. Copia as propriedades básicas (id, titulo, status...)
+		ChamadoDetalhadoOutput output = modelMapper.map(entity, ChamadoDetalhadoOutput.class);
+
+		// 2. Mapeia e Ordena as Interações (Timeline Administrativa)
+		if (entity.getInteracoes() != null) {
+			List<InteracaoOutput> historico = entity.getInteracoes().stream()
+				// Ordena do mais antigo para o mais novo (Cronológico)
+				.sorted((a, b) -> a.getDataHora().compareTo(b.getDataHora()))
+				.map(interacao -> {
+					InteracaoOutput out = modelMapper.map(interacao, InteracaoOutput.class);
+					
+					// Tratamento seguro para autor (se for evento de sistema, pode não ter autor)
+					if (interacao.getAutor() != null) {
+						out.setAutorNome(interacao.getAutor().getNome());
+						out.setAutorPerfil(interacao.getAutor().getPerfil().name());
+					} else {
+						out.setAutorNome("Sistema");
+						out.setAutorPerfil("SYSTEM");
+					}
+					
+					return out;
+				})
+				.collect(Collectors.toList());
+
+			output.setHistoricoEventos(historico);
+		}
+		
+		return output;
 	}
 
 }

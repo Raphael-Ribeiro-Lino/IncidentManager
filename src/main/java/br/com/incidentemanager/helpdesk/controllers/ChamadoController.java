@@ -26,6 +26,7 @@ import br.com.incidentemanager.helpdesk.dto.inputs.AvaliacaoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ReabrirChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.SolicitarTransferenciaInput;
+import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoDetalhadoOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -100,11 +101,11 @@ public class ChamadoController {
 	}
 
 	@GetMapping("/{id}/tecnico")
-	public ChamadoOutput buscaAtendimentoPorId(@PathVariable Long id) {
+	public ChamadoDetalhadoOutput buscaAtendimentoPorId(@PathVariable Long id) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaAtendimentoPorId(id, usuarioLogado);
 		chamadoService.atualizaStoragePathComLinkTemporario(chamadoEntity);
-		return chamadoConvert.entityToOutput(chamadoEntity);
+		return chamadoConvert.entityToDetalhadoOutput(chamadoEntity);
 	}
 
 	@PatchMapping("/{id}/status")
