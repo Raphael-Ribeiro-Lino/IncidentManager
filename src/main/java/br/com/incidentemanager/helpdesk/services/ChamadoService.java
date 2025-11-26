@@ -122,6 +122,13 @@ public class ChamadoService {
 	@Transactional
 	public ChamadoEntity atualizarStatus(ChamadoEntity chamadoEntity,
 			@Valid AlteraStatusChamadoInput alteraStatusChamadoInput, UsuarioEntity usuarioLogado) {
+		if (StatusChamadoEnum.CONCLUIDO.equals(alteraStatusChamadoInput.getStatus())) {
+			throw new BadRequestBusinessException(
+					"O técnico não pode encerrar o chamado diretamente. Altere para 'RESOLVIDO' e aguarde a avaliação do cliente.");
+		}
+		if (StatusChamadoEnum.ABERTO.equals(alteraStatusChamadoInput.getStatus())) {
+            throw new BadRequestBusinessException("Não é possível voltar o chamado para ABERTO. Use EM_ATENDIMENTO ou TRIAGEM.");
+       }
 		chamadoEntity.setStatus(alteraStatusChamadoInput.getStatus());
 		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
 		chamadoRepository.save(chamadoEntity);
