@@ -32,13 +32,14 @@ public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 			    LOWER(c.protocolo) LIKE LOWER(CONCAT('%', :busca, '%'))
 			)
 			ORDER BY
+			    CASE WHEN c.status = 'REABERTO' THEN 0 ELSE 1 END ASC,
 			    CASE c.prioridade
 			        WHEN 'CRITICA' THEN 1
 			        WHEN 'ALTA' THEN 2
 			        WHEN 'MEDIA' THEN 3
 			        WHEN 'BAIXA' THEN 4
 			        ELSE 5
-			    END,
+			    END ASC,
 			    c.dataCriacao ASC
 			""")
 	Page<ChamadoEntity> findAllByTecnicoResponsavelFiltrado(Pageable pagination,
