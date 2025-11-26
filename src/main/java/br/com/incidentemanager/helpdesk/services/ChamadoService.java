@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AnexoInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.AvaliacaoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.entities.AnexoEntity;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
@@ -72,7 +73,8 @@ public class ChamadoService {
 		chamadoEntity.setTecnicoResponsavel(tecnicoComMenosChamados);
 	}
 
-	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String searchTerm, StatusChamadoEnum status) {
+	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String searchTerm,
+			StatusChamadoEnum status) {
 		return chamadoRepository.findAllBySolicitanteFiltrado(pagination, usuarioLogado, searchTerm, status);
 	}
 
@@ -105,14 +107,10 @@ public class ChamadoService {
 		}
 	}
 
-	public Page<ChamadoEntity> listaMeusAtentimentos(Pageable pagination, UsuarioEntity usuarioLogado, PrioridadeEnum prioridade, String busca) {
-		return chamadoRepository.findAllByTecnicoResponsavelFiltrado(
-	            pagination, 
-	            usuarioLogado, 
-	            prioridade, 
-	            StatusChamadoEnum.CONCLUIDO,
-	            busca
-	    );
+	public Page<ChamadoEntity> listaMeusAtentimentos(Pageable pagination, UsuarioEntity usuarioLogado,
+			PrioridadeEnum prioridade, String busca) {
+		return chamadoRepository.findAllByTecnicoResponsavelFiltrado(pagination, usuarioLogado, prioridade,
+				StatusChamadoEnum.CONCLUIDO, busca);
 	}
 
 	public ChamadoEntity buscaAtendimentoPorId(Long id, UsuarioEntity usuarioLogado) {
@@ -136,5 +134,21 @@ public class ChamadoService {
 		if (chamadoEntity.getStatus() == StatusChamadoEnum.CONCLUIDO) {
 			throw new BadRequestBusinessException("Chamado concluído não pode ser alterado!");
 		}
+	}
+
+	@Transactional
+	public ChamadoEntity avaliarEFechar(ChamadoEntity chamadoEntity, @Valid AvaliacaoInput avaliacaoInput) {
+		if (StatusChamadoEnum.CONCLUIDO.equals(chamadoEntity.getStatus())) {
+			throw new BadRequestBusinessException("Este chamado já foi avaliado e encerrado.");
+		}
+		if (!chamadoEntity.getStatus().equals(StatusChamadoEnum.RESOLVIDO)) {
+			throw new BadRequestBusinessException("Este chamado ainda não foi resolvido pelo técnico responsável.");
+		}
+		chamadoEntity.setAvaliacaoNota(avaliacaoInput.getNota());
+		chamadoEntity.setAvaliacaoComentario(avaliacaoInput.getComentario());
+		chamadoEntity.setStatus(StatusChamadoEnum.CONCLUIDO);
+		chamadoEntity.setDataFechamento(Instant.now());
+		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
+		return chamadoRepository.save(chamadoEntity);
 	}
 }

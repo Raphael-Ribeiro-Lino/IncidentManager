@@ -22,6 +22,7 @@ import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
 import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.ChamadoConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.AvaliacaoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.SolicitarTransferenciaInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
@@ -123,6 +124,16 @@ public class ChamadoController {
 	public void solicitarTransferencia(@PathVariable Long id, @RequestBody @Valid SolicitarTransferenciaInput input) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		transferenciaService.solicitar(id, input, usuarioLogado);
+	}
+	
+	@PostMapping("/{id}/avaliar")
+	@PodeAcessarSe.EstaAutenticado
+	@ResponseStatus(HttpStatus.CREATED)
+	public ChamadoOutput avaliarChamado(@PathVariable Long id, @RequestBody @Valid AvaliacaoInput avaliacaoInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
+		ChamadoEntity chamadoAvaliado = chamadoService.avaliarEFechar(chamadoEntity, avaliacaoInput);
+		return chamadoConvert.entityToOutput(chamadoAvaliado);
 	}
 
 }
