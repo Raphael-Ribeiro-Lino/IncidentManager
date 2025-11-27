@@ -36,9 +36,6 @@ public class ChamadoService {
 	private AnexoService anexoService;
 
 	@Autowired
-	private InteracaoService interacaoService;
-
-	@Autowired
 	private UsuarioRepository usuarioRepository;
 
 	@Transactional
@@ -49,7 +46,6 @@ public class ChamadoService {
 		chamadoEntity.setAnexos(null);
 		ChamadoEntity chamadoCriado = chamadoRepository.saveAndFlush(chamadoEntity);
 		defineNovosAnexos(chamadoCriado, chamadoInput, usuarioLogado);
-		interacaoService.registrarAberturaChamado(chamadoCriado, usuarioLogado);
 		return chamadoRepository.save(chamadoCriado);
 	}
 
@@ -134,8 +130,6 @@ public class ChamadoService {
 		chamadoEntity.setStatus(alteraStatusChamadoInput.getStatus());
 		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
 		chamadoRepository.save(chamadoEntity);
-
-		interacaoService.registrarNovaInteracao(chamadoEntity, usuarioLogado, alteraStatusChamadoInput);
 		return chamadoEntity;
 	}
 
@@ -173,15 +167,6 @@ public class ChamadoService {
 		if (chamadoEntity.getDataFechamento() != null) {
 			chamadoEntity.setDataFechamento(null);
 		}
-		registrarInteracaoDeReabertura(chamadoEntity, usuarioLogado, reabrirChamadoInput.getMotivo());
 		return chamadoRepository.save(chamadoEntity);
-	}
-	
-	private void registrarInteracaoDeReabertura(ChamadoEntity chamado, UsuarioEntity autor, String motivo) {
-		AlteraStatusChamadoInput inputLog = new AlteraStatusChamadoInput();
-		inputLog.setStatus(StatusChamadoEnum.REABERTO);
-		inputLog.setObservacao("CHAMADO REABERTO PELO CLIENTE. Motivo: " + motivo);
-		inputLog.setVisivelCliente(true);
-		interacaoService.registrarNovaInteracao(chamado, autor, inputLog);
 	}
 }

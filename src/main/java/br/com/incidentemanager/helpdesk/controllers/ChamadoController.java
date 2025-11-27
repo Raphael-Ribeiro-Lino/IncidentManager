@@ -64,6 +64,7 @@ public class ChamadoController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoConvert.inputToEntity(chamadoInput);
 		ChamadoEntity chamadoCriado = chamadoService.criar(chamadoEntity, chamadoInput, usuarioLogado);
+		interacaoService.registrarAbertura(chamadoCriado, usuarioLogado);
 		return chamadoConvert.entityToOutput(chamadoCriado);
 	}
 
@@ -122,6 +123,8 @@ public class ChamadoController {
 		chamadoService.verificaSeChamadoFoiConcluido(chamadoEntity);
 		ChamadoEntity atualizado = chamadoService.atualizarStatus(chamadoEntity, alteraStatusChamadoInput,
 				usuarioLogado);
+		interacaoService.registrarMudancaStatus(atualizado, usuarioLogado, alteraStatusChamadoInput.getObservacao(),
+				alteraStatusChamadoInput.isVisivelCliente());
 		return chamadoConvert.entityToOutput(atualizado);
 	}
 
@@ -140,6 +143,7 @@ public class ChamadoController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
 		ChamadoEntity chamadoAvaliado = chamadoService.avaliarEFechar(chamadoEntity, avaliacaoInput);
+		interacaoService.registrarAvaliacao(chamadoAvaliado, usuarioLogado, avaliacaoInput.getNota(), avaliacaoInput.getComentario());
 		return chamadoConvert.entityToOutput(chamadoAvaliado);
 	}
 
@@ -151,6 +155,7 @@ public class ChamadoController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
 		ChamadoEntity chamadoReaberto = chamadoService.reabrir(id, reabrirChamadoInput, usuarioLogado, chamadoEntity);
+		interacaoService.registrarReabertura(chamadoReaberto, usuarioLogado, reabrirChamadoInput.getMotivo());
 		return chamadoConvert.entityToOutput(chamadoReaberto);
 	}
 
@@ -159,6 +164,7 @@ public class ChamadoController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public void adicionarNotaInterna(@PathVariable Long id, @RequestBody @Valid NotaInternaInput notaInternaInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		interacaoService.adicionarNotaInterna(id, notaInternaInput.getTexto(), usuarioLogado);
+		ChamadoEntity chamadoEntity = chamadoService.buscaAtendimentoPorId(id, usuarioLogado);
+		interacaoService.adicionarNotaInterna(chamadoEntity, usuarioLogado, notaInternaInput.getTexto());
 	}
 }

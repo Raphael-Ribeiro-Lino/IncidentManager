@@ -32,6 +32,9 @@ public class TransferenciaService {
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
+	
+	@Autowired
+	private InteracaoService interacaoService;
 
 	@Transactional
 	public TransferenciaEntity solicitar(Long chamadoId, SolicitarTransferenciaInput input,
@@ -92,15 +95,14 @@ public class TransferenciaService {
 
 		if (input.getAceito()) {
 			transferencia.setStatus(StatusTransferenciaEnum.ACEITA);
-
 			ChamadoEntity chamado = transferencia.getChamado();
-
 			if (!StatusChamadoEnum.ABERTO.equals(chamado.getStatus())) {
 				transferencia.setStatus(StatusTransferenciaEnum.CANCELADA);
 				transferencia.setMotivoRecusa("Chamado não está mais aberto.");
 			} else {
 				chamado.setTecnicoResponsavel(usuarioLogado);
 				chamadoRepository.save(chamado);
+				interacaoService.registrarAtribuicao(chamado, usuarioLogado, chamado.getTecnicoResponsavel());
 			}
 
 		} else {
