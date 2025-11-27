@@ -10,6 +10,8 @@ import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.InteracaoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.TipoInteracaoEnum;
+import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
+import br.com.incidentemanager.helpdesk.repositories.ChamadoRepository;
 import br.com.incidentemanager.helpdesk.repositories.InteracaoRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -19,6 +21,9 @@ public class InteracaoService {
 
 	@Autowired
 	private InteracaoRepository interacaoRepository;
+
+	@Autowired
+	private ChamadoRepository chamadoRepository;
 
 	@Transactional
 	public InteracaoEntity registrarAberturaChamado(ChamadoEntity chamado, UsuarioEntity autor) {
@@ -43,6 +48,22 @@ public class InteracaoService {
 		interacao.setAutor(tecnicoTi);
 		interacao.setChamado(chamado);
 		return interacaoRepository.save(interacao);
+	}
+
+	@Transactional
+	public void adicionarNotaInterna(Long chamadoId, String texto, UsuarioEntity autor) {
+		ChamadoEntity chamado = chamadoRepository.findById(chamadoId)
+				.orElseThrow(() -> new NotFoundBusinessException("Chamado não encontrado"));
+		InteracaoEntity nota = new InteracaoEntity();
+		nota.setChamado(chamado);
+		nota.setAutor(autor);
+		nota.setDescricao(texto);
+		nota.setDataHora(Instant.now());
+		nota.setTipo(TipoInteracaoEnum.COMENTARIO_INTERNO);
+		nota.setVisivelCliente(false);
+		interacaoRepository.save(nota);
+		chamado.setDataUltimaAtualizacao(Instant.now());
+		chamadoRepository.save(chamado);
 	}
 
 }

@@ -24,6 +24,7 @@ import br.com.incidentemanager.helpdesk.converts.ChamadoConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.AlteraStatusChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.AvaliacaoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
+import br.com.incidentemanager.helpdesk.dto.inputs.NotaInternaInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.ReabrirChamadoInput;
 import br.com.incidentemanager.helpdesk.dto.inputs.SolicitarTransferenciaInput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoDetalhadoOutput;
@@ -33,6 +34,7 @@ import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.services.ChamadoService;
+import br.com.incidentemanager.helpdesk.services.InteracaoService;
 import br.com.incidentemanager.helpdesk.services.TokenService;
 import br.com.incidentemanager.helpdesk.services.TransferenciaService;
 import jakarta.validation.Valid;
@@ -52,6 +54,9 @@ public class ChamadoController {
 
 	@Autowired
 	private TransferenciaService transferenciaService;
+	
+	@Autowired
+	private InteracaoService interacaoService;
 
 	@PostMapping(consumes = { "multipart/form-data" })
 	@PodeAcessarSe.EstaAutenticado
@@ -127,7 +132,7 @@ public class ChamadoController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		transferenciaService.solicitar(id, input, usuarioLogado);
 	}
-	
+
 	@PostMapping("/{id}/avaliar")
 	@PodeAcessarSe.EstaAutenticado
 	@ResponseStatus(HttpStatus.CREATED)
@@ -138,16 +143,22 @@ public class ChamadoController {
 		return chamadoConvert.entityToOutput(chamadoAvaliado);
 	}
 
-	
 	@PostMapping("/{id}/reabrir")
 	@PodeAcessarSe.EstaAutenticado
 	@ResponseStatus(HttpStatus.CREATED)
-	public ChamadoOutput reabrirChamado(
-			@PathVariable Long id, 
+	public ChamadoOutput reabrirChamado(@PathVariable Long id,
 			@RequestBody @Valid ReabrirChamadoInput reabrirChamadoInput) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
 		ChamadoEntity chamadoReaberto = chamadoService.reabrir(id, reabrirChamadoInput, usuarioLogado, chamadoEntity);
 		return chamadoConvert.entityToOutput(chamadoReaberto);
+	}
+
+	@PostMapping("/{id}/nota-interna")
+	@PodeAcessarSe.TemPerfilTecnicoTi
+	@ResponseStatus(HttpStatus.CREATED)
+	public void adicionarNotaInterna(@PathVariable Long id, @RequestBody @Valid NotaInternaInput notaInternaInput) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		interacaoService.adicionarNotaInterna(id, notaInternaInput.getTexto(), usuarioLogado);
 	}
 }
