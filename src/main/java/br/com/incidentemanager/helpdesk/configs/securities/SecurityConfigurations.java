@@ -38,7 +38,7 @@ public class SecurityConfigurations {
 
 		configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
 
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
 
 		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-xsrf-token",
 				"Access-Control-Allow-Headers", "Origin", "Accept", "X-Requested-With"));
