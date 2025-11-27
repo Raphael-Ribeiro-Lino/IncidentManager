@@ -27,7 +27,7 @@ public class InteracaoEntity {
     @Column(name = "id", nullable = false)
     private Long id;
     
-    @Column(name = "descricao", nullable = false)
+    @Column(name = "descricao", nullable = false, length = 2000)
     private String descricao;
     
     @Column(name = "dataHora", nullable = false)
