@@ -32,7 +32,7 @@ public class TransferenciaService {
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
-	
+
 	@Autowired
 	private InteracaoService interacaoService;
 
@@ -48,8 +48,9 @@ public class TransferenciaService {
 			throw new BadRequestBusinessException("Você não é o técnico responsável por este chamado.");
 		}
 
-		if (!StatusChamadoEnum.ABERTO.equals(chamado.getStatus())) {
-			throw new BadRequestBusinessException("Transferências só são permitidas para chamados com status ABERTO.");
+		if (!StatusChamadoEnum.ABERTO.equals(chamado.getStatus())
+				&& !StatusChamadoEnum.REABERTO.equals(chamado.getStatus())) {
+			throw new BadRequestBusinessException("Transferências só são permitidas para chamados com status ABERTO ou REABERTO.");
 		}
 
 		boolean jaExistePendente = transferenciaRepository.existsByChamadoAndStatus(chamado,
