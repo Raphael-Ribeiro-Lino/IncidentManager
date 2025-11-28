@@ -19,6 +19,7 @@ import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
 import br.com.incidentemanager.helpdesk.configs.securities.PodeAcessarSe;
 import br.com.incidentemanager.helpdesk.converts.TransferenciaConvert;
 import br.com.incidentemanager.helpdesk.dto.inputs.ResponderTransferenciaInput;
+import br.com.incidentemanager.helpdesk.dto.outputs.TransferenciaDetalhadaOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.TransferenciaOutput;
 import br.com.incidentemanager.helpdesk.entities.TransferenciaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
@@ -59,12 +60,12 @@ public class TransferenciaController {
 
 	@GetMapping("/enviadas")
 	@PodeAcessarSe.TemPerfilTecnicoTi
-	public Page<TransferenciaOutput> listarSolicitacoesEnviadas(@RequestParam(required = false) String search,
+	public Page<TransferenciaDetalhadaOutput> listarSolicitacoesEnviadas(@RequestParam(required = false) String search,
 			@PageableDefault(size = 10, sort = "dataSolicitacao", direction = Direction.DESC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		Page<TransferenciaEntity> enviadas = transferenciaService.listarSolicitacoesEnviadas(usuarioLogado, search,
 				pagination);
-		return transferenciaConvert.pageEntityToPageOutput(enviadas);
+		return transferenciaConvert.pageEntityToPageDetalhadaOutput(enviadas);
 	}
 	
 	@PostMapping("/{id}/cancelar")

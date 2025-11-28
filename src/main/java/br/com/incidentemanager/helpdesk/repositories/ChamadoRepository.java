@@ -13,6 +13,7 @@ import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
+import br.com.incidentemanager.helpdesk.enums.StatusTransferenciaEnum;
 
 public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 
@@ -31,6 +32,11 @@ public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 			    LOWER(c.titulo) LIKE LOWER(CONCAT('%', :busca, '%')) OR
 			    LOWER(c.protocolo) LIKE LOWER(CONCAT('%', :busca, '%'))
 			)
+			AND NOT EXISTS (
+			    SELECT t FROM TransferenciaEntity t
+			    WHERE t.chamado = c
+			    AND t.status = :statusTransferencia
+			)
 			ORDER BY
 			    CASE WHEN c.status = 'REABERTO' THEN 0 ELSE 1 END ASC,
 			    CASE c.prioridade
@@ -40,11 +46,12 @@ public interface ChamadoRepository extends JpaRepository<ChamadoEntity, Long> {
 			        WHEN 'BAIXA' THEN 4
 			        ELSE 5
 			    END ASC,
-			    c.dataCriacao ASC
+			    c.dataUltimaAtualizacao ASC
 			""")
 	Page<ChamadoEntity> findAllByTecnicoResponsavelFiltrado(Pageable pagination,
 			@Param("tecnico") UsuarioEntity tecnicoResponsavel, @Param("prioridade") PrioridadeEnum prioridade,
-			@Param("status") StatusChamadoEnum status, @Param("busca") String busca);
+			@Param("status") StatusChamadoEnum status, @Param("busca") String busca,
+			@Param("statusTransferencia") StatusTransferenciaEnum statusTransferencia);
 
 	Optional<ChamadoEntity> findByIdAndTecnicoResponsavel(Long id, UsuarioEntity tecnicoResponsavel);
 
