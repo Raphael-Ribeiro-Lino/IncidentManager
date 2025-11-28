@@ -39,10 +39,10 @@ public class TransferenciaEntity {
 	@JoinColumn(name = "tecnico_destino_id", nullable = false)
 	private UsuarioEntity tecnicoDestino;
 
-	@Column(name = "motivo", nullable = false)
+	@Column(name = "motivo", nullable = false, length = 2000)
 	private String motivo;
 
-	@Column(name = "motivo_recusa")
+	@Column(name = "motivo_recusa", length = 2000)
 	private String motivoRecusa;
 
 	@Enumerated(EnumType.STRING)
