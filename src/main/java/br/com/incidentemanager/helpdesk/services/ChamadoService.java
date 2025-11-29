@@ -159,9 +159,9 @@ public class ChamadoService {
 	@Transactional
 	public ChamadoEntity reabrir(Long id, @Valid ReabrirChamadoInput reabrirChamadoInput, UsuarioEntity usuarioLogado,
 			ChamadoEntity chamadoEntity) {
-		if (!StatusChamadoEnum.RESOLVIDO.equals(chamadoEntity.getStatus())
-				&& !StatusChamadoEnum.CONCLUIDO.equals(chamadoEntity.getStatus())) {
-			throw new BadRequestBusinessException("Apenas chamados Resolvidos ou Concluídos podem ser reabertos.");
+		if (!StatusChamadoEnum.RESOLVIDO.equals(chamadoEntity.getStatus())) {
+			throw new BadRequestBusinessException(
+					"Apenas chamados no status RESOLVIDO (aguardando aprovação) podem ser reabertos.");
 		}
 		chamadoEntity.setStatus(StatusChamadoEnum.REABERTO);
 		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
