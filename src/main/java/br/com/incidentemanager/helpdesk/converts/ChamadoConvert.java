@@ -17,7 +17,7 @@ import jakarta.validation.Valid;
 
 @Component
 public class ChamadoConvert {
-	
+
 	@Autowired
 	private ModelMapper modelMapper;
 
@@ -32,35 +32,33 @@ public class ChamadoConvert {
 	public Page<ChamadoOutput> pageEntityToPageOutput(Page<ChamadoEntity> chamados) {
 		return chamados.map(this::entityToOutput);
 	}
-	
-	public ChamadoDetalhadoOutput entityToDetalhadoOutput(ChamadoEntity entity) {
-		// 1. Copia as propriedades básicas (id, titulo, status...)
-		ChamadoDetalhadoOutput output = modelMapper.map(entity, ChamadoDetalhadoOutput.class);
 
-		// 2. Mapeia e Ordena as Interações (Timeline Administrativa)
+	public ChamadoDetalhadoOutput entityToDetalhadoOutput(ChamadoEntity entity) {
+		return converterComFiltro(entity, false);
+	}
+
+	public ChamadoDetalhadoOutput entityToDetalhadoOutputPublico(ChamadoEntity entity) {
+		return converterComFiltro(entity, true);
+	}
+
+	private ChamadoDetalhadoOutput converterComFiltro(ChamadoEntity entity, boolean apenasPublicos) {
+		ChamadoDetalhadoOutput output = modelMapper.map(entity, ChamadoDetalhadoOutput.class);
 		if (entity.getInteracoes() != null) {
 			List<InteracaoOutput> historico = entity.getInteracoes().stream()
-				// Ordena do mais antigo para o mais novo (Cronológico)
-				.sorted((a, b) -> a.getDataHora().compareTo(b.getDataHora()))
-				.map(interacao -> {
-					InteracaoOutput out = modelMapper.map(interacao, InteracaoOutput.class);
-					
-					// Tratamento seguro para autor (se for evento de sistema, pode não ter autor)
-					if (interacao.getAutor() != null) {
-						out.setAutorNome(interacao.getAutor().getNome());
-						out.setAutorPerfil(interacao.getAutor().getPerfil().name());
-					} else {
-						out.setAutorNome("Sistema");
-						out.setAutorPerfil("SYSTEM");
-					}
-					
-					return out;
-				})
-				.collect(Collectors.toList());
-
+					.filter(interacao -> !apenasPublicos || interacao.isVisivelCliente())
+					.sorted((a, b) -> a.getDataHora().compareTo(b.getDataHora())).map(interacao -> {
+						InteracaoOutput out = modelMapper.map(interacao, InteracaoOutput.class);
+						if (interacao.getAutor() != null) {
+							out.setAutorNome(interacao.getAutor().getNome());
+							out.setAutorPerfil(interacao.getAutor().getPerfil().name());
+						} else {
+							out.setAutorNome("Sistema");
+							out.setAutorPerfil("SYSTEM");
+						}
+						return out;
+					}).collect(Collectors.toList());
 			output.setHistoricoEventos(historico);
 		}
-		
 		return output;
 	}
 

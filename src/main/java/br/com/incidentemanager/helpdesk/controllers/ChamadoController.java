@@ -54,7 +54,7 @@ public class ChamadoController {
 
 	@Autowired
 	private TransferenciaService transferenciaService;
-	
+
 	@Autowired
 	private InteracaoService interacaoService;
 
@@ -80,11 +80,11 @@ public class ChamadoController {
 
 	@GetMapping("/{id}")
 	@PodeAcessarSe.EstaAutenticado
-	public ChamadoOutput buscaPorId(@PathVariable Long id) {
+	public ChamadoDetalhadoOutput buscaPorId(@PathVariable Long id) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
 		chamadoService.atualizaStoragePathComLinkTemporario(chamadoEntity);
-		return chamadoConvert.entityToOutput(chamadoEntity);
+		return chamadoConvert.entityToDetalhadoOutputPublico(chamadoEntity);
 	}
 
 	@PutMapping("/{id}")
@@ -143,7 +143,8 @@ public class ChamadoController {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
 		ChamadoEntity chamadoEntity = chamadoService.buscaPorId(id, usuarioLogado);
 		ChamadoEntity chamadoAvaliado = chamadoService.avaliarEFechar(chamadoEntity, avaliacaoInput);
-		interacaoService.registrarAvaliacao(chamadoAvaliado, usuarioLogado, avaliacaoInput.getNota(), avaliacaoInput.getComentario());
+		interacaoService.registrarAvaliacao(chamadoAvaliado, usuarioLogado, avaliacaoInput.getNota(),
+				avaliacaoInput.getComentario());
 		return chamadoConvert.entityToOutput(chamadoAvaliado);
 	}
 
