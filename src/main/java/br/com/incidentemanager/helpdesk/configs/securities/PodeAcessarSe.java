@@ -36,4 +36,10 @@ public @interface PodeAcessarSe {
 	public @interface TemPerfilTecnicoTi{
 		
 	}
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	@PreAuthorize("@tokenService.podeAcessarPorPerfil({'TECNICO_TI', 'ADMIN', 'ADMIN_EMPRESA'})")
+	public @interface PodeGerarRelatorio{
+		
+	}
 }
