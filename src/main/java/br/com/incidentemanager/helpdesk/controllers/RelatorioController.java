@@ -1,8 +1,10 @@
 package br.com.incidentemanager.helpdesk.controllers;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -37,10 +39,11 @@ public class RelatorioController {
 
 	@GetMapping("/dados")
 	@PodeAcessarSe.PodeGerarRelatorio
-	public ResponseEntity<List<ChamadoOutput>> buscarDados(@ModelAttribute RelatorioFiltroInput filtro) {
+	public ResponseEntity<Page<ChamadoOutput>> buscarDados(@ModelAttribute RelatorioFiltroInput filtro,
+			@PageableDefault(size = 10, sort = "dataCriacao", direction = Direction.DESC) Pageable pageable) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-		List<ChamadoEntity> chamados = relatorioService.buscarDadosRelatorio(filtro, usuarioLogado);
-		return ResponseEntity.ok(chamados.stream().map(chamadoConvert::entityToOutput).toList());
+		Page<ChamadoEntity> chamadosPage = relatorioService.buscarDadosRelatorio(filtro, usuarioLogado, pageable);
+		return ResponseEntity.ok(chamadoConvert.pageEntityToPageOutput(chamadosPage));
 	}
 
 	@GetMapping("/exportar/excel")
