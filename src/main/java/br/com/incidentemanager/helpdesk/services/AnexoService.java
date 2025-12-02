@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import br.com.incidentemanager.helpdesk.dto.inputs.AnexoInput;
 import br.com.incidentemanager.helpdesk.entities.AnexoEntity;
 import br.com.incidentemanager.helpdesk.entities.ChamadoEntity;
+import br.com.incidentemanager.helpdesk.entities.ChatMensagemEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.exceptions.BusinessException;
 import br.com.incidentemanager.helpdesk.repositories.AnexoRepository;
@@ -88,8 +89,10 @@ public class AnexoService {
 		});
 
 		for (AnexoInput novoAnexo : novosAnexos) {
-			boolean jaExiste = anexosAtuais.stream().anyMatch(a -> a.getNomeArquivo().equals(novoAnexo.getNomeArquivo())
-					&& a.getTamanhoBytes().equals(novoAnexo.getTamanhoBytes()) && a.getTipo().equals(novoAnexo.getTipo()));
+			boolean jaExiste = anexosAtuais.stream()
+					.anyMatch(a -> a.getNomeArquivo().equals(novoAnexo.getNomeArquivo())
+							&& a.getTamanhoBytes().equals(novoAnexo.getTamanhoBytes())
+							&& a.getTipo().equals(novoAnexo.getTipo()));
 
 			if (!jaExiste) {
 				AnexoEntity criado = criar(novoAnexo, chamadoEntity, usuarioEntity);
@@ -107,6 +110,37 @@ public class AnexoService {
 			anexoRepository.delete(anexoEntity);
 		} catch (Exception e) {
 			throw new BusinessException("Erro ao excluir anexo: " + anexoEntity.getNomeArquivo());
+		}
+	}
+
+	@Transactional
+	public AnexoEntity criarParaChat(AnexoInput anexoInput, ChatMensagemEntity mensagem, UsuarioEntity usuarioLogado) {
+		AnexoEntity anexoEntity = new AnexoEntity();
+		anexoEntity.setEnviadoPor(usuarioLogado);
+		anexoEntity.setNomeArquivo(anexoInput.getNomeArquivo());
+		anexoEntity.setTamanhoBytes(anexoInput.getTamanhoBytes());
+		anexoEntity.setTipo(anexoInput.getTipo());
+
+		anexoEntity.setChatMensagem(mensagem);
+		anexoEntity.setChamado(mensagem.getChamado());
+
+		defineLinkAnexosChat(anexoInput, mensagem, usuarioLogado, anexoEntity);
+
+		return anexoRepository.save(anexoEntity);
+	}
+
+	private void defineLinkAnexosChat(AnexoInput anexoInput, ChatMensagemEntity mensagem, UsuarioEntity usuarioLogado,
+			AnexoEntity anexoEntity) {
+		String key = String.format("chamados/%d/chat/%d/%d_%s", mensagem.getChamado().getId(), mensagem.getId(),
+				System.currentTimeMillis(), anexoInput.getNomeArquivo().replaceAll("\\s+", "_"));
+
+		try (InputStream inputStream = anexoInput.getArquivo().getInputStream()) {
+			s3Service.saveFile(key, inputStream, anexoInput.getArquivo().getSize(),
+					anexoInput.getArquivo().getContentType(), bucketName);
+			anexoEntity.setStoragePath(key);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new BusinessException("Erro ao salvar o arquivo do chat, tente novamente!");
 		}
 	}
 }
