@@ -66,4 +66,19 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 	Page<UsuarioEntity> findTecnicosParaTransferencia(Pageable pageable, @Param("empresa") EmpresaEntity empresa,
 			@Param("perfil") PerfilEnum perfil, @Param("idExceto") Long idExceto, @Param("search") String search);
 
+	@Query("""
+			SELECT u FROM UsuarioEntity u
+			WHERE u.perfil = 'TECNICO_TI'
+			AND u.ativo = true
+			AND (:empresaId IS NULL OR u.empresa.id = :empresaId)
+			AND (
+			    :search IS NULL OR
+			    LOWER(u.nome) LIKE LOWER(CONCAT('%', :search, '%')) OR
+			    LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+			)
+			ORDER BY u.nome ASC
+			""")
+	Page<UsuarioEntity> pesquisarTecnicos(@Param("search") String search, @Param("empresaId") Long empresaId,
+			Pageable pageable);
+
 }

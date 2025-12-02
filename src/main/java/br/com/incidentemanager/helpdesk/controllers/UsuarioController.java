@@ -158,14 +158,24 @@ public class UsuarioController {
 		UsuarioEntity usuarioEncontrado = usuarioService.buscaPorIdComMesmaEmpresa(id, usuarioLogado);
 		usuarioService.enviaEmailDefinirSenha(usuarioEncontrado);
 	}
-	
+
 	@GetMapping("/tecnicos-disponiveis-transferencia")
-    @PodeAcessarSe.TemPerfilTecnicoTi
+	@PodeAcessarSe.TemPerfilTecnicoTi
 	public Page<TecnicoSelecaoOutput> listarTecnicosTransferencia(@RequestParam(required = false) String search,
 			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pagination) {
 		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
-        Page<UsuarioEntity> tecnicos = usuarioService.listarTecnicosParaTransferencia(usuarioLogado, search, pagination);
+		Page<UsuarioEntity> tecnicos = usuarioService.listarTecnicosParaTransferencia(usuarioLogado, search,
+				pagination);
 		return usuarioConvert.pageEntityToPageTecnicoOutput(tecnicos);
-    }
+	}
+
+	@GetMapping("/tecnico/lista")
+	@PodeAcessarSe.TemPerfilAdmEmpresa
+	public Page<TecnicoSelecaoOutput> pesquisarTecnicos(@RequestParam(required = false, defaultValue = "") String termo,
+			@PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pageable) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		Page<UsuarioEntity> tecnicos = usuarioService.listarTecnicos(termo, usuarioLogado, pageable);
+		return usuarioConvert.pageEntityToPageTecnicoOutput(tecnicos);
+	}
 
 }

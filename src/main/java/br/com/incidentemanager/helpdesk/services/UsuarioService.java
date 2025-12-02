@@ -272,4 +272,10 @@ public class UsuarioService {
         );
 	}
 
+	public Page<UsuarioEntity> listarTecnicos(String termo, UsuarioEntity usuarioLogado, Pageable pageable) {
+        Long empresaId = usuarioLogado.getPerfil().equals(PerfilEnum.ADMIN) ? null
+                : usuarioLogado.getEmpresa().getId();
+        return usuarioRepository.pesquisarTecnicos(termo, empresaId, pageable);
+	}
+
 }
