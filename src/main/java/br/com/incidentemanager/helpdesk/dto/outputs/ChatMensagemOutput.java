@@ -23,6 +23,10 @@ public class ChatMensagemOutput {
 	private String remetentePerfil;
 
 	private boolean souEu;
+	
+	private String lidoEm;
 
+	private boolean visivelParaCliente;
+	
 	private List<AnexoOutput> anexos;
 }

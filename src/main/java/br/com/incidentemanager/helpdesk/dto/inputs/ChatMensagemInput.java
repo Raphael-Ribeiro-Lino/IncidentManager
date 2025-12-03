@@ -16,5 +16,7 @@ public class ChatMensagemInput {
 	private String conteudo;
 
 	private List<MultipartFile> arquivos;
+	
+	private Boolean privado = false; 
 
 }

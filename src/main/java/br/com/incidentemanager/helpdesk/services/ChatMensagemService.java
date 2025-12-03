@@ -47,47 +47,53 @@ public class ChatMensagemService {
 		ChamadoEntity chamado = chamadoRepository.findById(chamadoId)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado não encontrado"));
 
-		// 1. Validações
 		validarPermissaoChat(chamado, usuarioLogado);
 		validarStatusChamado(chamado);
 		validarConteudo(mensagemInput);
 
-		// 2. Prepara a Entidade
 		mensagemEntity.setChamado(chamado);
 		mensagemEntity.setRemetente(usuarioLogado);
-		mensagemEntity.setVisivelParaCliente(true);
+
+		if (Boolean.TRUE.equals(mensagemInput.getPrivado()) && !usuarioLogado.getPerfil().equals(PerfilEnum.USUARIO)) {
+			mensagemEntity.setVisivelParaCliente(false);
+		} else {
+			mensagemEntity.setVisivelParaCliente(true);
+		}
 
 		definirDestinatario(mensagemEntity, chamado, usuarioLogado);
 
-		// Define o Tipo da Mensagem (Visualização no Chat)
 		mensagemEntity.setTipo(detectarTipoMensagem(mensagemInput.getArquivos()));
 
 		if (mensagemEntity.getConteudo() == null)
 			mensagemEntity.setConteudo("");
 
-		// 3. Salva Parcial
 		ChatMensagemEntity mensagemSalva = chatMensagemRepository.saveAndFlush(mensagemEntity);
 
-		// 4. Processa Anexos
 		defineNovosAnexos(mensagemSalva, mensagemInput, usuarioLogado);
 
-		// 5. Atualiza Chamado
 		chamado.setDataUltimaAtualizacao(Instant.now());
 		chamadoRepository.save(chamado);
 
 		return chatMensagemRepository.save(mensagemSalva);
 	}
 
+	@Transactional
 	public List<ChatMensagemEntity> listarMensagens(Long chamadoId, UsuarioEntity usuarioLogado) {
 		ChamadoEntity chamado = chamadoRepository.findById(chamadoId)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado não encontrado"));
 
 		validarPermissaoChat(chamado, usuarioLogado);
 
-		return chatMensagemRepository.findByChamadoIdOrderByEnviadoEmAsc(chamadoId);
-	}
+		chatMensagemRepository.marcarTodasComoLidas(chamadoId, usuarioLogado.getId());
 
-	// --- LÓGICA AUXILIAR ---
+		List<ChatMensagemEntity> todasMensagens = chatMensagemRepository.findByChamadoIdOrderByEnviadoEmAsc(chamadoId);
+
+		if (usuarioLogado.getPerfil().equals(PerfilEnum.USUARIO)) {
+			return todasMensagens.stream().filter(ChatMensagemEntity::getVisivelParaCliente).toList();
+		}
+
+		return todasMensagens;
+	}
 
 	private void defineNovosAnexos(ChatMensagemEntity mensagemEntity, ChatMensagemInput mensagemInput,
 			UsuarioEntity usuarioLogado) {
@@ -101,7 +107,6 @@ public class ChatMensagemService {
 				anexoInput.setNomeArquivo(arquivo.getOriginalFilename());
 				anexoInput.setTamanhoBytes(arquivo.getSize());
 
-				// Usa o método ajustado para mapear corretamente o Enum
 				anexoInput.setTipo(identificarTipoAnexo(arquivo));
 
 				AnexoEntity anexoCriado = anexoService.criarParaChat(anexoInput, mensagemEntity, usuarioLogado);
@@ -111,7 +116,6 @@ public class ChatMensagemService {
 		}
 	}
 
-	// Mapeia o arquivo para o seu TipoAnexoEnum (PDF, DOC, DOCX, PNG, JPG, ZIP)
 	private TipoAnexoEnum identificarTipoAnexo(MultipartFile arquivo) {
 		String nomeOriginal = arquivo.getOriginalFilename();
 		String ext = "";
@@ -127,7 +131,7 @@ public class ChatMensagemService {
 		case "zip" -> TipoAnexoEnum.ZIP;
 		case "docx" -> TipoAnexoEnum.DOCX;
 		case "doc" -> TipoAnexoEnum.DOC;
-		default -> TipoAnexoEnum.DOC; // Fallback seguro, ou lance exceção
+		default -> TipoAnexoEnum.DOC;
 		};
 	}
 
@@ -136,7 +140,6 @@ public class ChatMensagemService {
 			return TipoMensagemEnum.TEXTO;
 		}
 
-		// Verifica se TODOS são imagens para exibir galeria
 		boolean apenasImagens = arquivos.stream().allMatch(file -> {
 			String nome = file.getOriginalFilename().toLowerCase();
 			return nome.endsWith("png") || nome.endsWith("jpg") || nome.endsWith("jpeg");
@@ -145,7 +148,7 @@ public class ChatMensagemService {
 		if (apenasImagens) {
 			return TipoMensagemEnum.IMAGEM;
 		} else {
-			return TipoMensagemEnum.ARQUIVO; // Misto ou Docs
+			return TipoMensagemEnum.ARQUIVO;
 		}
 	}
 
