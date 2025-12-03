@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.ChamadoInput;
+import br.com.incidentemanager.helpdesk.dto.outputs.AnexoOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoDetalhadoOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.ChamadoOutput;
 import br.com.incidentemanager.helpdesk.dto.outputs.InteracaoOutput;
@@ -33,16 +34,32 @@ public class ChamadoConvert {
 		return chamados.map(this::entityToOutput);
 	}
 
-	public ChamadoDetalhadoOutput entityToDetalhadoOutput(ChamadoEntity entity) {
-		return converterComFiltro(entity, false);
+	public ChamadoDetalhadoOutput entityToDetalhadoOutputPublico(ChamadoEntity entity) {
+		return converterComFiltro(entity, true); // true = aplica filtro de segurança
 	}
 
-	public ChamadoDetalhadoOutput entityToDetalhadoOutputPublico(ChamadoEntity entity) {
-		return converterComFiltro(entity, true);
+	// Método para técnicos (vê tudo)
+	public ChamadoDetalhadoOutput entityToDetalhadoOutput(ChamadoEntity entity) {
+		return converterComFiltro(entity, false); // false = sem filtro
 	}
 
 	private ChamadoDetalhadoOutput converterComFiltro(ChamadoEntity entity, boolean apenasPublicos) {
 		ChamadoDetalhadoOutput output = modelMapper.map(entity, ChamadoDetalhadoOutput.class);
+
+		if (entity.getAnexos() != null) {
+			List<AnexoOutput> anexosFiltrados = entity.getAnexos().stream().filter(anexo -> {
+				if (!apenasPublicos)
+					return true;
+
+				if (anexo.getChatMensagem() == null)
+					return true;
+
+				return Boolean.TRUE.equals(anexo.getChatMensagem().getVisivelParaCliente());
+			}).map(anexo -> modelMapper.map(anexo, AnexoOutput.class)).collect(Collectors.toList());
+
+			output.setAnexos(anexosFiltrados);
+		}
+
 		if (entity.getInteracoes() != null) {
 			List<InteracaoOutput> historico = entity.getInteracoes().stream()
 					.filter(interacao -> !apenasPublicos || interacao.isVisivelCliente())
@@ -50,15 +67,22 @@ public class ChamadoConvert {
 						InteracaoOutput out = modelMapper.map(interacao, InteracaoOutput.class);
 						if (interacao.getAutor() != null) {
 							out.setAutorNome(interacao.getAutor().getNome());
-							out.setAutorPerfil(interacao.getAutor().getPerfil().name());
+							if (interacao.getAutor().getPerfil().name().contains("TECNICO")
+									|| interacao.getAutor().getPerfil().name().contains("ADMIN")) {
+								out.setAutorPerfil("Equipe TI");
+							} else {
+								out.setAutorPerfil("Cliente");
+							}
 						} else {
 							out.setAutorNome("Sistema");
 							out.setAutorPerfil("SYSTEM");
 						}
 						return out;
 					}).collect(Collectors.toList());
+
 			output.setHistoricoEventos(historico);
 		}
+
 		return output;
 	}
 
