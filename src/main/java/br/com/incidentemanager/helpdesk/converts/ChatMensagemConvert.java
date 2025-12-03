@@ -2,6 +2,7 @@ package br.com.incidentemanager.helpdesk.converts;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import br.com.incidentemanager.helpdesk.dto.inputs.ChatMensagemInput;
@@ -19,6 +20,9 @@ public class ChatMensagemConvert {
 	
 	@Autowired
 	private S3Service s3Service;
+	
+	@Value("${api.bucket-name}")
+	private String bucketName;
 
 	public ChatMensagemEntity inputToEntity(@Valid ChatMensagemInput mensagemInput) {
 		return modelMapper.map(mensagemInput, ChatMensagemEntity.class);
@@ -37,7 +41,7 @@ public class ChatMensagemConvert {
 		
         if (entity.getAnexos() != null && !entity.getAnexos().isEmpty()) {
             out.getAnexos().forEach(anexoOut -> {
-                anexoOut.setStoragePath(s3Service.generatePresignedUrl(anexoOut.getStoragePath(), "seu-bucket"));
+                anexoOut.setStoragePath(s3Service.generatePresignedUrl(anexoOut.getStoragePath(), bucketName));
             });
         }
 

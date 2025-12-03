@@ -1,11 +1,14 @@
 package br.com.incidentemanager.helpdesk.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import br.com.incidentemanager.helpdesk.configs.ControllerConfig;
@@ -42,6 +45,20 @@ public class ChatMensagemController {
 		ChatMensagemEntity mensagemSalva = chatMensagemService.enviar(mensagemEntity, mensagemInput, id, usuarioLogado);
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.body(chatMensagemConvert.entityToOutput(mensagemSalva, usuarioLogado));
+	}
+	
+	@GetMapping
+	@PodeAcessarSe.EstaAutenticado
+	public ResponseEntity<List<ChatMensagemOutput>> listarMensagens(@PathVariable Long id) {
+		UsuarioEntity usuarioLogado = tokenService.buscaUsuario();
+		
+		List<ChatMensagemEntity> mensagens = chatMensagemService.listarMensagens(id, usuarioLogado);
+		
+		List<ChatMensagemOutput> output = mensagens.stream()
+				.map(msg -> chatMensagemConvert.entityToOutput(msg, usuarioLogado))
+				.toList();
+				
+		return ResponseEntity.ok(output);
 	}
 
 }
