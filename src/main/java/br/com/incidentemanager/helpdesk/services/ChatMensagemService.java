@@ -18,6 +18,7 @@ import br.com.incidentemanager.helpdesk.enums.PerfilEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.enums.TipoAnexoEnum;
 import br.com.incidentemanager.helpdesk.enums.TipoMensagemEnum;
+import br.com.incidentemanager.helpdesk.enums.TipoNotificacaoEnum; // Import Novo
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.UnauthorizedAccessBusinessException;
@@ -38,6 +39,9 @@ public class ChatMensagemService {
 	@Autowired
 	private ChamadoRepository chamadoRepository;
 
+	@Autowired
+	private NotificacaoService notificacaoService; // <--- INJEÇÃO DA NOTIFICAÇÃO
+
 	private static final Set<String> EXTENSOES_PERMITIDAS = Set.of("pdf", "doc", "docx", "png", "jpg", "jpeg", "zip");
 
 	@Transactional
@@ -47,10 +51,12 @@ public class ChatMensagemService {
 		ChamadoEntity chamado = chamadoRepository.findById(chamadoId)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado não encontrado"));
 
+		// 1. Validações
 		validarPermissaoChat(chamado, usuarioLogado);
 		validarStatusChamado(chamado);
 		validarConteudo(mensagemInput);
 
+		// 2. Prepara a Entidade
 		mensagemEntity.setChamado(chamado);
 		mensagemEntity.setRemetente(usuarioLogado);
 
@@ -67,16 +73,69 @@ public class ChatMensagemService {
 		if (mensagemEntity.getConteudo() == null)
 			mensagemEntity.setConteudo("");
 
+		// 3. Salva Parcial
 		ChatMensagemEntity mensagemSalva = chatMensagemRepository.saveAndFlush(mensagemEntity);
 
+		// 4. Processa Anexos
 		defineNovosAnexos(mensagemSalva, mensagemInput, usuarioLogado);
 
+		// 5. Atualiza Chamado
 		chamado.setDataUltimaAtualizacao(Instant.now());
 		chamadoRepository.save(chamado);
+
+		// 6. NOTIFICA O DESTINATÁRIO (NOVO)
+		notificarDestinatario(mensagemSalva, chamado, usuarioLogado);
 
 		return chatMensagemRepository.save(mensagemSalva);
 	}
 
+	// ... (listarMensagens, defineNovosAnexos, identificarTipoAnexo... MANTÉM
+	// IGUAL)
+
+	// --- LÓGICA DE NOTIFICAÇÃO ---
+
+	private void notificarDestinatario(ChatMensagemEntity mensagem, ChamadoEntity chamado, UsuarioEntity remetente) {
+		UsuarioEntity destinatario = mensagem.getDestinatario();
+
+		// Se não tem destinatário (ex: admin comentando em chamado sem técnico), não
+		// notifica
+		if (destinatario == null)
+			return;
+
+		// SEGURANÇA: Se a mensagem é privada (visivelParaCliente = false),
+		// e o destinatário é um CLIENTE, NÃO enviamos notificação.
+		if (Boolean.FALSE.equals(mensagem.getVisivelParaCliente())
+				&& destinatario.getPerfil().equals(PerfilEnum.USUARIO)) {
+			return;
+		}
+
+		// Monta o texto do alerta
+		String titulo = "Nova mensagem: " + chamado.getProtocolo();
+		String corpo = montarTextoNotificacao(mensagem, remetente);
+
+		notificacaoService.criar(destinatario, titulo, corpo, chamado, TipoNotificacaoEnum.NOVA_MENSAGEM);
+	}
+
+	private String montarTextoNotificacao(ChatMensagemEntity mensagem, UsuarioEntity remetente) {
+		String base = remetente.getNome() + ": ";
+
+		if (mensagem.getConteudo() != null && !mensagem.getConteudo().isBlank()) {
+			// Se tem texto, usa o texto (truncado se for longo)
+			String texto = mensagem.getConteudo();
+			if (texto.length() > 50)
+				texto = texto.substring(0, 47) + "...";
+			return base + texto;
+		} else {
+			// Se não tem texto, deve ter anexo
+			return base + "Enviou um anexo 📎";
+		}
+	}
+
+	// ... (Restante dos métodos auxiliares: detectarTipoMensagem, validarExtensao,
+	// etc... MANTÉM IGUAL)
+
+	// Apenas para garantir que o contexto está completo, aqui estão os métodos que
+	// já existiam:
 	@Transactional
 	public List<ChatMensagemEntity> listarMensagens(Long chamadoId, UsuarioEntity usuarioLogado) {
 		ChamadoEntity chamado = chamadoRepository.findById(chamadoId)

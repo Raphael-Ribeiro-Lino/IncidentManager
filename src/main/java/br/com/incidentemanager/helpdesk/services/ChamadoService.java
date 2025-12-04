@@ -20,6 +20,7 @@ import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.PrioridadeEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusTransferenciaEnum;
+import br.com.incidentemanager.helpdesk.enums.TipoNotificacaoEnum; // Enum criado anteriormente
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.ChamadoRepository;
@@ -39,16 +40,125 @@ public class ChamadoService {
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 
+	@Autowired
+	private NotificacaoService notificacaoService; // <--- 1. INJEÇÃO DA NOTIFICAÇÃO
+
 	@Transactional
 	public ChamadoEntity criar(ChamadoEntity chamadoEntity, @Valid ChamadoInput chamadoInput,
 			UsuarioEntity usuarioLogado) {
 		chamadoEntity.setSolicitante(usuarioLogado);
 		defineTecnicoResponsavel(chamadoEntity);
 		chamadoEntity.setAnexos(null);
+
 		ChamadoEntity chamadoCriado = chamadoRepository.saveAndFlush(chamadoEntity);
 		defineNovosAnexos(chamadoCriado, chamadoInput, usuarioLogado);
-		return chamadoRepository.save(chamadoCriado);
+
+		ChamadoEntity salvo = chamadoRepository.save(chamadoCriado);
+
+		// NOTIFICAÇÃO 1: Avisar o Técnico que ele recebeu um chamado novo
+		if (salvo.getTecnicoResponsavel() != null) {
+			notificacaoService.criar(salvo.getTecnicoResponsavel(), "Novo Chamado Atribuído: " + salvo.getProtocolo(),
+					"Você foi definido como responsável pelo chamado: " + salvo.getTitulo(), salvo,
+					TipoNotificacaoEnum.TRANSFERENCIA // Ou MUDANCA_STATUS se preferir
+			);
+		}
+
+		return salvo;
 	}
+
+	@Transactional
+	public ChamadoEntity atualizarStatus(ChamadoEntity chamadoEntity,
+			@Valid AlteraStatusChamadoInput alteraStatusChamadoInput, UsuarioEntity usuarioLogado) {
+
+		StatusChamadoEnum novoStatus = alteraStatusChamadoInput.getStatus();
+
+		if (StatusChamadoEnum.CONCLUIDO.equals(novoStatus)) {
+			throw new BadRequestBusinessException(
+					"O técnico não pode encerrar o chamado diretamente. Altere para 'RESOLVIDO' e aguarde a avaliação do cliente.");
+		}
+		if (StatusChamadoEnum.ABERTO.equals(novoStatus)) {
+			throw new BadRequestBusinessException(
+					"Não é possível voltar o chamado para ABERTO. Use EM_ATENDIMENTO ou TRIAGEM.");
+		}
+
+		chamadoEntity.setStatus(novoStatus);
+		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
+		chamadoRepository.save(chamadoEntity);
+
+		// NOTIFICAÇÃO 2: Avisar o Cliente sobre a mudança
+		if (StatusChamadoEnum.RESOLVIDO.equals(novoStatus)) {
+			// Caso especial: Resolvido (Exige ação do usuário)
+			notificacaoService.criar(chamadoEntity.getSolicitante(),
+					"Chamado Resolvido! " + chamadoEntity.getProtocolo(),
+					"O técnico informou que o problema foi solucionado. Clique aqui para confirmar e avaliar.",
+					chamadoEntity, TipoNotificacaoEnum.RESOLUCAO);
+		} else {
+			// Mudança comum (Em atendimento, Aguardando, etc)
+			notificacaoService.criar(chamadoEntity.getSolicitante(),
+					"Atualização no chamado " + chamadoEntity.getProtocolo(),
+					"O status do seu chamado mudou para: " + novoStatus, chamadoEntity,
+					TipoNotificacaoEnum.MUDANCA_STATUS);
+		}
+
+		return chamadoEntity;
+	}
+
+	@Transactional
+	public ChamadoEntity avaliarEFechar(ChamadoEntity chamadoEntity, @Valid AvaliacaoInput avaliacaoInput) {
+		if (StatusChamadoEnum.CONCLUIDO.equals(chamadoEntity.getStatus())) {
+			throw new BadRequestBusinessException("Este chamado já foi avaliado e encerrado.");
+		}
+		if (!chamadoEntity.getStatus().equals(StatusChamadoEnum.RESOLVIDO)) {
+			throw new BadRequestBusinessException("Este chamado ainda não foi resolvido pelo técnico responsável.");
+		}
+
+		chamadoEntity.setAvaliacaoNota(avaliacaoInput.getNota());
+		chamadoEntity.setAvaliacaoComentario(avaliacaoInput.getComentario());
+		chamadoEntity.setStatus(StatusChamadoEnum.CONCLUIDO);
+		chamadoEntity.setDataFechamento(Instant.now());
+		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
+
+		ChamadoEntity salvo = chamadoRepository.save(chamadoEntity);
+
+		// NOTIFICAÇÃO 3: Avisar o Técnico sobre a nota recebida (Feedback)
+		if (salvo.getTecnicoResponsavel() != null) {
+			notificacaoService.criar(salvo.getTecnicoResponsavel(), "Chamado Avaliado: " + salvo.getProtocolo(),
+					"O cliente encerrou o chamado com nota " + avaliacaoInput.getNota() + "/5.", salvo,
+					TipoNotificacaoEnum.MUDANCA_STATUS // Se não tiver no Enum, use MUDANCA_STATUS ou RESOLUCAO
+			);
+		}
+
+		return salvo;
+	}
+
+	@Transactional
+	public ChamadoEntity reabrir(Long id, @Valid ReabrirChamadoInput reabrirChamadoInput, UsuarioEntity usuarioLogado,
+			ChamadoEntity chamadoEntity) {
+		if (!StatusChamadoEnum.RESOLVIDO.equals(chamadoEntity.getStatus())) {
+			throw new BadRequestBusinessException(
+					"Apenas chamados no status RESOLVIDO (aguardando aprovação) podem ser reabertos.");
+		}
+
+		chamadoEntity.setStatus(StatusChamadoEnum.REABERTO);
+		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
+		if (chamadoEntity.getDataFechamento() != null) {
+			chamadoEntity.setDataFechamento(null);
+		}
+
+		ChamadoEntity salvo = chamadoRepository.save(chamadoEntity);
+
+		// NOTIFICAÇÃO 4: Alerta Crítico para o Técnico (Reabertura)
+		if (salvo.getTecnicoResponsavel() != null) {
+			notificacaoService.criar(salvo.getTecnicoResponsavel(), "⚠️ Chamado Reaberto: " + salvo.getProtocolo(),
+					"O cliente não aceitou a solução. Motivo: " + reabrirChamadoInput.getMotivo(), salvo,
+					TipoNotificacaoEnum.REABERTURA);
+		}
+
+		return salvo;
+	}
+
+	// --- MÉTODOS AUXILIARES E DE LEITURA (SEM ALTERAÇÃO NA LÓGICA DE NOTIFICAÇÃO)
+	// ---
 
 	private void defineNovosAnexos(ChamadoEntity chamadoEntity, ChamadoInput chamadoInput,
 			UsuarioEntity usuarioLogado) {
@@ -66,9 +176,14 @@ public class ChamadoService {
 		Long idEmpresa = chamadoEntity.getSolicitante().getEmpresa().getId();
 		UsuarioEntity tecnicoComMenosChamados = usuarioRepository.findTecnicoComMenosChamados(idEmpresa);
 		if (tecnicoComMenosChamados == null) {
-			throw new NotFoundBusinessException("Nenhum técnico disponível para atribuição.");
+			// Se não tiver técnico, o chamado fica sem responsável (na fila da empresa)
+			// Futuramente pode notificar o ADMIN_EMPRESA aqui que chegou um chamado sem
+			// técnico
+			// throw new NotFoundBusinessException("Nenhum técnico disponível para
+			// atribuição.");
+		} else {
+			chamadoEntity.setTecnicoResponsavel(tecnicoComMenosChamados);
 		}
-		chamadoEntity.setTecnicoResponsavel(tecnicoComMenosChamados);
 	}
 
 	public Page<ChamadoEntity> lista(Pageable pagination, UsuarioEntity usuarioLogado, String searchTerm,
@@ -77,9 +192,8 @@ public class ChamadoService {
 	}
 
 	public ChamadoEntity buscaPorId(Long id, UsuarioEntity usuarioLogado) {
-		ChamadoEntity chamadoEncontrado = chamadoRepository.findByIdAndSolicitante(id, usuarioLogado)
+		return chamadoRepository.findByIdAndSolicitante(id, usuarioLogado)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado " + id + " não encontrado"));
-		return chamadoEncontrado;
 	}
 
 	public void atualizaStoragePathComLinkTemporario(ChamadoEntity chamadoEncontrado) {
@@ -112,62 +226,13 @@ public class ChamadoService {
 	}
 
 	public ChamadoEntity buscaAtendimentoPorId(Long id, UsuarioEntity usuarioLogado) {
-		ChamadoEntity chamadoEncontrado = chamadoRepository.findByIdAndTecnicoResponsavel(id, usuarioLogado)
+		return chamadoRepository.findByIdAndTecnicoResponsavel(id, usuarioLogado)
 				.orElseThrow(() -> new NotFoundBusinessException("Chamado " + id + " não encontrado"));
-		return chamadoEncontrado;
-	}
-
-	@Transactional
-	public ChamadoEntity atualizarStatus(ChamadoEntity chamadoEntity,
-			@Valid AlteraStatusChamadoInput alteraStatusChamadoInput, UsuarioEntity usuarioLogado) {
-		if (StatusChamadoEnum.CONCLUIDO.equals(alteraStatusChamadoInput.getStatus())) {
-			throw new BadRequestBusinessException(
-					"O técnico não pode encerrar o chamado diretamente. Altere para 'RESOLVIDO' e aguarde a avaliação do cliente.");
-		}
-		if (StatusChamadoEnum.ABERTO.equals(alteraStatusChamadoInput.getStatus())) {
-			throw new BadRequestBusinessException(
-					"Não é possível voltar o chamado para ABERTO. Use EM_ATENDIMENTO ou TRIAGEM.");
-		}
-		chamadoEntity.setStatus(alteraStatusChamadoInput.getStatus());
-		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
-		chamadoRepository.save(chamadoEntity);
-		return chamadoEntity;
 	}
 
 	public void verificaSeChamadoFoiConcluido(ChamadoEntity chamadoEntity) {
 		if (chamadoEntity.getStatus() == StatusChamadoEnum.CONCLUIDO) {
 			throw new BadRequestBusinessException("Chamado concluído não pode ser alterado!");
 		}
-	}
-
-	@Transactional
-	public ChamadoEntity avaliarEFechar(ChamadoEntity chamadoEntity, @Valid AvaliacaoInput avaliacaoInput) {
-		if (StatusChamadoEnum.CONCLUIDO.equals(chamadoEntity.getStatus())) {
-			throw new BadRequestBusinessException("Este chamado já foi avaliado e encerrado.");
-		}
-		if (!chamadoEntity.getStatus().equals(StatusChamadoEnum.RESOLVIDO)) {
-			throw new BadRequestBusinessException("Este chamado ainda não foi resolvido pelo técnico responsável.");
-		}
-		chamadoEntity.setAvaliacaoNota(avaliacaoInput.getNota());
-		chamadoEntity.setAvaliacaoComentario(avaliacaoInput.getComentario());
-		chamadoEntity.setStatus(StatusChamadoEnum.CONCLUIDO);
-		chamadoEntity.setDataFechamento(Instant.now());
-		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
-		return chamadoRepository.save(chamadoEntity);
-	}
-
-	@Transactional
-	public ChamadoEntity reabrir(Long id, @Valid ReabrirChamadoInput reabrirChamadoInput, UsuarioEntity usuarioLogado,
-			ChamadoEntity chamadoEntity) {
-		if (!StatusChamadoEnum.RESOLVIDO.equals(chamadoEntity.getStatus())) {
-			throw new BadRequestBusinessException(
-					"Apenas chamados no status RESOLVIDO (aguardando aprovação) podem ser reabertos.");
-		}
-		chamadoEntity.setStatus(StatusChamadoEnum.REABERTO);
-		chamadoEntity.setDataUltimaAtualizacao(Instant.now());
-		if (chamadoEntity.getDataFechamento() != null) {
-			chamadoEntity.setDataFechamento(null);
-		}
-		return chamadoRepository.save(chamadoEntity);
 	}
 }

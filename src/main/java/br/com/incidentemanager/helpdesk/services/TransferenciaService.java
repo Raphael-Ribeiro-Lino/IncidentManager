@@ -14,6 +14,7 @@ import br.com.incidentemanager.helpdesk.entities.TransferenciaEntity;
 import br.com.incidentemanager.helpdesk.entities.UsuarioEntity;
 import br.com.incidentemanager.helpdesk.enums.StatusChamadoEnum;
 import br.com.incidentemanager.helpdesk.enums.StatusTransferenciaEnum;
+import br.com.incidentemanager.helpdesk.enums.TipoNotificacaoEnum; // Importar Enum
 import br.com.incidentemanager.helpdesk.exceptions.BadRequestBusinessException;
 import br.com.incidentemanager.helpdesk.exceptions.NotFoundBusinessException;
 import br.com.incidentemanager.helpdesk.repositories.ChamadoRepository;
@@ -36,6 +37,9 @@ public class TransferenciaService {
 	@Autowired
 	private InteracaoService interacaoService;
 
+	@Autowired
+	private NotificacaoService notificacaoService; // <--- 1. INJEÇÃO
+
 	@Transactional
 	public TransferenciaEntity solicitar(Long chamadoId, SolicitarTransferenciaInput input,
 			UsuarioEntity tecnicoOrigem) {
@@ -50,7 +54,8 @@ public class TransferenciaService {
 
 		if (!StatusChamadoEnum.ABERTO.equals(chamado.getStatus())
 				&& !StatusChamadoEnum.REABERTO.equals(chamado.getStatus())) {
-			throw new BadRequestBusinessException("Transferências só são permitidas para chamados com status ABERTO ou REABERTO.");
+			throw new BadRequestBusinessException(
+					"Transferências só são permitidas para chamados com status ABERTO ou REABERTO.");
 		}
 
 		boolean jaExistePendente = transferenciaRepository.existsByChamadoAndStatus(chamado,
@@ -70,12 +75,21 @@ public class TransferenciaService {
 		if (!tecnicoOrigem.getEmpresa().getId().equals(tecnicoDestino.getEmpresa().getId())) {
 			throw new BadRequestBusinessException("O técnico de destino deve pertencer à mesma empresa.");
 		}
+
 		TransferenciaEntity transferencia = new TransferenciaEntity();
 		transferencia.setChamado(chamado);
 		transferencia.setTecnicoOrigem(tecnicoOrigem);
 		transferencia.setTecnicoDestino(tecnicoDestino);
 		transferencia.setMotivo(input.getMotivo());
-		return transferenciaRepository.save(transferencia);
+
+		TransferenciaEntity salva = transferenciaRepository.save(transferencia);
+
+		// NOTIFICAÇÃO 1: Avisar o Destino que chegou uma solicitação
+		notificacaoService.criar(tecnicoDestino, "Solicitação de Transferência",
+				tecnicoOrigem.getNome() + " deseja transferir o chamado " + chamado.getProtocolo() + " para você.",
+				chamado, TipoNotificacaoEnum.TRANSFERENCIA);
+
+		return salva;
 	}
 
 	@Transactional
@@ -97,13 +111,20 @@ public class TransferenciaService {
 		if (input.getAceito()) {
 			transferencia.setStatus(StatusTransferenciaEnum.ACEITA);
 			ChamadoEntity chamado = transferencia.getChamado();
-			if (!StatusChamadoEnum.ABERTO.equals(chamado.getStatus())) {
+
+			if (!StatusChamadoEnum.ABERTO.equals(chamado.getStatus())
+					&& !StatusChamadoEnum.REABERTO.equals(chamado.getStatus())) {
 				transferencia.setStatus(StatusTransferenciaEnum.CANCELADA);
-				transferencia.setMotivoRecusa("Chamado não está mais aberto.");
+				transferencia.setMotivoRecusa("Chamado não está mais aberto/reaberto.");
 			} else {
 				chamado.setTecnicoResponsavel(usuarioLogado);
 				chamadoRepository.save(chamado);
 				interacaoService.registrarAtribuicao(chamado, usuarioLogado, chamado.getTecnicoResponsavel());
+
+				// NOTIFICAÇÃO 2A: Avisar Origem que foi ACEITO
+				notificacaoService.criar(transferencia.getTecnicoOrigem(), "Transferência Aceita",
+						usuarioLogado.getNome() + " aceitou assumir o chamado " + chamado.getProtocolo(), chamado,
+						TipoNotificacaoEnum.TRANSFERENCIA);
 			}
 
 		} else {
@@ -112,6 +133,12 @@ public class TransferenciaService {
 			}
 			transferencia.setStatus(StatusTransferenciaEnum.RECUSADA);
 			transferencia.setMotivoRecusa(input.getMotivoRecusa());
+
+			// NOTIFICAÇÃO 2B: Avisar Origem que foi RECUSADO
+			notificacaoService.criar(transferencia.getTecnicoOrigem(), "Transferência Recusada",
+					usuarioLogado.getNome() + " recusou o chamado " + transferencia.getChamado().getProtocolo()
+							+ ". Motivo: " + input.getMotivoRecusa(),
+					transferencia.getChamado(), TipoNotificacaoEnum.TRANSFERENCIA);
 		}
 
 		transferenciaRepository.save(transferencia);
@@ -132,6 +159,7 @@ public class TransferenciaService {
 	public void cancelar(Long transferenciaId, UsuarioEntity tecnicoLogado) {
 		TransferenciaEntity transferencia = transferenciaRepository.findById(transferenciaId)
 				.orElseThrow(() -> new NotFoundBusinessException("Transferência não encontrada"));
+
 		if (!transferencia.getTecnicoOrigem().getId().equals(tecnicoLogado.getId())) {
 			throw new BadRequestBusinessException("Você não tem permissão para cancelar esta solicitação.");
 		}
@@ -140,10 +168,19 @@ public class TransferenciaService {
 			throw new BadRequestBusinessException(
 					"Não é possível cancelar. A solicitação já foi " + transferencia.getStatus());
 		}
+
 		transferencia.setStatus(StatusTransferenciaEnum.CANCELADA);
 		transferencia.setDataResposta(Instant.now());
 		transferencia.setMotivoRecusa("Cancelada pelo solicitante.");
+
 		transferenciaRepository.save(transferencia);
+
+		// NOTIFICAÇÃO 3: Avisar o Destino que foi cancelado (Opcional, mas boa prática
+		// para limpar a lista dele)
+		notificacaoService.criar(transferencia.getTecnicoDestino(), "Solicitação Cancelada",
+				tecnicoLogado.getNome() + " cancelou a transferência do chamado "
+						+ transferencia.getChamado().getProtocolo(),
+				transferencia.getChamado(), TipoNotificacaoEnum.TRANSFERENCIA);
 	}
 
 }
